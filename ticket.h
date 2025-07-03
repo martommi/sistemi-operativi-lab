@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include "./user.h"
-
 typedef enum TicketStatus {
     TICKET_STATUS_OPEN,
     TICKET_STATUS_ONGOING,
@@ -17,7 +15,7 @@ typedef struct ticket {
     char *date;
     uint16_t priority;
     TicketStatus status;
-    struct user *support_agent;
+    uint32_t support_agent;    // uid
 } ticket_t;
 
 #endif /* TICKET_H */

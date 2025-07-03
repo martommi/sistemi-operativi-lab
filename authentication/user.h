@@ -2,6 +2,7 @@
 #define USER_H
 
 #include <stdint.h>
+#include "../ticket.h"
 
 #define GROUP_ADMIN            0x00
 #define GROUP_CLIENT           0x01
@@ -14,9 +15,12 @@ typedef struct user {
     uint8_t groups;
 } user_t;
 
+int user_login(char *username, char *password);
+int user_logout(const user_t *user);
+
 int user_in_group(const user_t *user, uint8_t group);
-int user_add_group(user_t *user, uint8_t group);
-int user_remove_group(user_t *user, uint8_t group);
-char *user_show_groups(const user_t *user);
+void user_add_group(user_t *user, uint8_t group);
+void user_remove_group(user_t *user, uint8_t group);
+int assign_ticket(const ticket_t *ticket, const user_t *user);
 
 #endif /* USER_H */
