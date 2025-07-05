@@ -8,6 +8,7 @@ typedef struct user {
     char *username;
     char *password;
     uint8_t groups;
+    struct user *next;
 } user_t;
 
 #endif /* USER_H */

@@ -20,7 +20,12 @@ typedef struct session {
     Privileges privileges;
 } session_t;
 
-int login(char *usernmae, char *password);
-int logout();
+session_t *start_session(int fd, user_t *user, int logged_in, Privileges privileges);
+void end_session(session_t *session);
+
+int login(char *usernmae, char *passw);
+int logout(session_t *session);
+int is_logged_in(session_t *session);
+int has_privileges(session_t *session, Privileges privileges);
 
 #endif /* SESSION_H */
