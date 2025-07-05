@@ -1,9 +1,49 @@
-#include "./ticket.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "./ticket.h"
+#include "../authentication/user.h"
+
 static ticket_t *head = NULL;
+
+ticket_t *create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
+    if (!title && !desc) {
+        printf("create_ticket(): Title and Description are required fields, please provide them.");
+        exit(EXIT_FAILURE);
+    }
+
+    ticket_t *ticket;
+    if (!(ticket = (ticket_t *)malloc(sizeof(ticket_t)))) {
+        perror("malloc()");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(ticket, 0, sizeof(ticket_t));
+
+    ticket->title = title;
+    ticket->description = desc;
+    ticket->date = date;
+    ticket->priority = priority;
+    ticket->status = status;
+    ticket->support_agent = support_agent;
+    ticket->next = NULL;
+
+    return ticket;
+}
+
+void free_ticket(ticket_t *target) {
+    if (!target) {
+        printf("free_ticket(): received NULL pointer.");
+        exit(EXIT_FAILURE);
+    }
+
+    free(target->title);
+    free(target->description);
+    free(target->date);
+    free(target);
+}
 
 int get_tickets(ticket_t **destination, ticket_filter filter, ...) {
     ticket_t *current = head;
@@ -13,14 +53,19 @@ int get_tickets(ticket_t **destination, ticket_filter filter, ...) {
     va_start(args, filter);
 
     while (current) {
-        va_list args_copy;
-        va_copy(args_copy, args);
+        int match = 1;
 
-        if (filter(current, args_copy)) {
+        if (filter != NULL) {
+            va_list args_copy;
+            va_copy(args_copy, args);
+            match = filter(current, args_copy);
+            va_end(args_copy);
+        }
+
+        if (match) {
             destination[count++] = current;
         }
 
-        va_end(args_copy);
         current = current->next;
     }
 
@@ -28,17 +73,21 @@ int get_tickets(ticket_t **destination, ticket_filter filter, ...) {
     return count;
 }
 
-int get_by_priority(ticket_t *target, va_list args) {
+int get_all_tickets(ticket_t **destination) {
+    return get_tickets(destination, NULL);
+}
+
+int get_by_priority(const ticket_t *target, va_list args) {
     TicketPriority priority = va_arg(args, TicketPriority);
     return (target->priority == priority);
 }
 
-int get_by_status(ticket_t *target, va_list args) {
+int get_by_status(const ticket_t *target, va_list args) {
     TicketStatus status = va_arg(args, TicketStatus);
     return (target->status == status);
 }
 
-int get_by_title(ticket_t *target, va_list args) {
+int get_by_title(const ticket_t *target, va_list args) {
     const char *query = va_arg(args, const char *);
     TitleMatchMode mode = va_arg(args, TitleMatchMode);
 
@@ -57,7 +106,7 @@ int get_by_title(ticket_t *target, va_list args) {
     }
 }
 
-int get_by_date(ticket_t *target, va_list args) {
+int get_by_date(const ticket_t *target, va_list args) {
     const char *ticket_date = target->date;
     if (!ticket_date) return 0;
 

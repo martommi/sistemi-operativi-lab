@@ -1,12 +1,5 @@
 #include "./user.h"
-
-int user_login(char *username, char *password) {
-    return 0;
-}
-
-int user_logout(const user_t *user) {
-    return 0;
-}
+#include "./user-lib.h"
 
 int user_in_group(const user_t *user, uint8_t group) {
     return (user->groups & group) != 0;

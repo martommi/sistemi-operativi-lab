@@ -1,7 +1,0 @@
-#ifndef CONNECTION_H
-#define CONNECTION_H
-
-#define DEFAULT_PORT 12345
-#define LOCALHOST "127.0.0.1"
-
-#endif /* CONNECTION_H */
