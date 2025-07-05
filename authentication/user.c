@@ -1,5 +1,4 @@
 #include "./user.h"
-#include <string.h>
 
 int user_login(char *username, char *password) {
     return 0;
