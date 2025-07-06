@@ -2,12 +2,13 @@
 #define SESSION_H
 
 #include <stdint.h>
-#include "./user.h"
 
 #define DEFAULT_PORT 12345
 #define LOCALHOST "127.0.0.1"
 
-typedef enum Priviliges {
+typedef struct user user_t;
+
+typedef enum Priviliges { // qualche dubbio se rivedere i gruppi utente o questa TODO
     PRIVILEGES_ADMIN,
     PRIVILEGE_STANDARD,
     PRIVILEGES_SUPPORT_AGENT

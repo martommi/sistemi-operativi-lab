@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "./ticket.h"
-#include "../authentication/user.h"
 
 static ticket_t *head = NULL;
 

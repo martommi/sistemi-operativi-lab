@@ -1,5 +1,5 @@
 #include "./session.h"
-#include "user.h"
+#include "user-internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "../authentication/user.h"
+typedef struct user user_t;
 
 typedef enum TicketStatus {
     TICKET_STATUS_OPEN,
