@@ -9,9 +9,9 @@
 typedef struct user user_t;
 
 typedef enum Priviliges { // qualche dubbio se rivedere i gruppi utente o questa TODO
-    PRIVILEGES_ADMIN,
-    PRIVILEGE_STANDARD,
-    PRIVILEGES_SUPPORT_AGENT
+    PRIVILEGES_ADMIN = (1 << 0),
+    PRIVILEGES_GUEST = (1 << 1),
+    PRIVILEGES_SUPPORT_AGENT = (1 << 2)
 } Privileges;
 
 typedef struct session {
@@ -24,8 +24,8 @@ typedef struct session {
 session_t *start_session(int fd, user_t *user, int logged_in, Privileges privileges);
 void end_session(session_t *session);
 
-int login(char *usernmae, char *passw);
-int logout(session_t *session);
+int login(session_t *session, char *username, char *passw);
+void logout(session_t *session);
 int is_logged_in(session_t *session);
 int has_privileges(session_t *session, Privileges privileges);
 

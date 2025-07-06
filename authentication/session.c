@@ -1,10 +1,9 @@
-#include "./session.h"
-#include "user-internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-static user_t *head = NULL;
+#include "./session.h"
+#include "user-lib.h"
 
 session_t *start_session(int fd, user_t *user, int logged_in, Privileges privileges) {
     if (fd < 0) {
@@ -29,27 +28,20 @@ session_t *start_session(int fd, user_t *user, int logged_in, Privileges privile
 }
 
 void end_session(session_t *session) {
-    logout(session);
     free(session);
 }
 
-int login(char *username, char *passw) { //TODO sposta in user
-    session_t *session;
-    user_t *current = head;
-
-    while (current) {
-        if (strcmp(current->username, username) == 0) {
-            return session->logged_in = (strcmp(current->password, passw) == 0);
-        }
-
-        current = current->next;
+int login(session_t *session, char *username, char *passw) {
+    if (!authenticate(username, passw)) {
+        fprintf(stderr, "%s(): wrong credentials.", __func__);
+        return 0;
     }
 
-    return 0;
+    return session->logged_in = 1;
 }
 
-int logout(session_t *session) {
-    return !(session->logged_in = 0);
+void logout(session_t *session) {
+    session->logged_in = 0;
 }
 
 int is_logged_in(session_t *session) {
