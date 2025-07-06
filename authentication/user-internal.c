@@ -32,7 +32,7 @@ int _add_user(user_t *user) {
 
     while (curr) {
         if (curr->uid == user->uid) {
-            fprintf(stderr, "%s(): user with UID %u already registered.\n", __func__, user->uid);
+            // fprintf(stderr, "%s(): user with UID %u already registered.\n", __func__, user->uid);
             return 0;
         }
         
@@ -64,7 +64,7 @@ int _remove_user(user_t *user) {
         curr = curr->next;
     }
 
-    fprintf(stderr, "%s(): trying to remove non-existing user.\n", __func__);
+    // fprintf(stderr, "%s(): trying to remove non-existing user.\n", __func__);
     return 0;
 }
 
@@ -90,7 +90,7 @@ int _authenticate(const char *username, const char *passw) {
             strcmp(curr->password, passw) == 0) {
             return 1;
         }
-        
+
         curr = curr->next;
     }
 
@@ -107,4 +107,12 @@ int _count_users() {
     }
 
     return count;
+}
+
+void _save_users(const char *filename) {
+    //todo
+}
+
+void _load_users(const char *filename) {
+    //todo
 }

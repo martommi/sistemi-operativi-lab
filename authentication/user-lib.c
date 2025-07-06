@@ -48,10 +48,10 @@ void user_remove_group(user_t *user, uint8_t group) {
     user->groups &= ~group;
 }
 
-void save_users(char *filename) {
+void save_users(const char *filename) {
     _save_users(filename);
 }
 
-void load_users(char *filename) {
+void load_users(const char *filename) {
     _load_users(filename);
 }
