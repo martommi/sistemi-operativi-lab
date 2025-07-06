@@ -6,7 +6,7 @@
 
 static user_t *head = NULL;
 
-user_t *create_user(uint32_t uid, char *username, char *passw, uint8_t groups) {
+user_t *_create_user(uint32_t uid, char *username, char *passw, uint8_t groups) {
     user_t *user;
     if (!(user = (user_t *)malloc(sizeof(user_t)))) {
         perror("malloc()");
@@ -21,13 +21,13 @@ user_t *create_user(uint32_t uid, char *username, char *passw, uint8_t groups) {
     return user;
 }
 
-void free_user(user_t *user) {
+void _free_user(user_t *user) {
     free(user->username);
     free(user->password);
     free(user);
 }
 
-int add_user(user_t *user) {
+int _add_user(user_t *user) {
     user_t *curr = head;
 
     while (curr) {
@@ -56,7 +56,7 @@ int _remove_user(user_t *user) {
                 prev->next = curr->next;
             }
 
-            free_user(curr);
+            _free_user(curr);
             return 1;
         }
 
@@ -82,7 +82,22 @@ int _find_users(const char *username, int limit, user_t **found) {
     return count;
 }
 
-int count_users() {
+int _authenticate(const char *username, const char *passw) {
+    user_t *curr = head;
+
+    while (curr) {
+        if (strcmp(curr->username, username) == 0 &&
+            strcmp(curr->password, passw) == 0) {
+            return 1;
+        }
+        
+        curr = curr->next;
+    }
+
+    return 0;
+}
+
+int _count_users() {
     user_t *curr = head;
     int count = 0;
 

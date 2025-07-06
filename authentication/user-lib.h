@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct user user_t;    // not referencing user.h to hide details of struct user
+typedef struct user user_t;    // not referencing user-internal.h to hide details of struct user
 
 #define GROUP_ADMIN            (1 << 0)
 #define GROUP_CLIENT           (1 << 1)
@@ -12,6 +12,7 @@ typedef struct user user_t;    // not referencing user.h to hide details of stru
 int register_user(uint32_t uid, char *username, char* passw, uint8_t groups);    // wrapper for create + add
 int remove_user(user_t *user);
 int find_users(const char *username, int limit, user_t **found);
+int authenticate(const char *username, const char* passw);
 
 int user_in_group(const user_t *user, uint8_t group);
 void user_add_group(user_t *user, uint8_t group);
