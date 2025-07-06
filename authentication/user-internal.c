@@ -68,7 +68,7 @@ int _remove_user(user_t *user) {
     return 0;
 }
 
-int _retrieve_users(const char *username, int limit, user_t **found) {
+int _find_users(const char *username, int limit, user_t **found) {
     user_t *curr = head;
     int count = 0;
 

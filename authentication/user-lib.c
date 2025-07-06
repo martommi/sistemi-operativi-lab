@@ -18,13 +18,13 @@ int remove_user(user_t *user) {
     return _remove_user(user);
 }
 
-int retrieve_users(const char *username, int limit, user_t **found) {
+int find_users(const char *username, int limit, user_t **found) {
     if (!username || limit <= 1 || !found) {
         fprintf(stderr, "%s(): invalid arguments\n", __func__);
         return -1;
     }
 
-    return _retrieve_users(username, limit, found);
+    return _find_users(username, limit, found);
 }
 
 int user_in_group(const user_t *user, uint8_t group) {

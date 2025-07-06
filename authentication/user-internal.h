@@ -16,6 +16,6 @@ void free_user(user_t *user);
 
 int add_user(user_t *user);
 int _remove_user(user_t *user);
-int _retrieve_users(const char *username, int limit, user_t **found);
+int _find_users(const char *username, int limit, user_t **found);
 
 #endif /* USER_INTERNAL_H */
