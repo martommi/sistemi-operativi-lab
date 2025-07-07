@@ -9,7 +9,7 @@
 
 typedef struct user user_t;    // not referencing user-internal.h to hide details of struct user
 
-int register_user(uint32_t uid, char *username, char* passw, uint8_t groups);    // wrapper for create + add
+int register_user(char *username, char* passw, uint8_t groups);    // wrapper for create + add
 int remove_user(user_t *user);
 int find_users(const char *username, int limit, user_t **found);
 int authenticate(const char *username, const char* passw);

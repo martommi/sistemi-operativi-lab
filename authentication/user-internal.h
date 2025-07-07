@@ -11,7 +11,7 @@ typedef struct user {
     struct user *next;
 } user_t;
 
-user_t *_create_user(uint32_t uid, char *username, char *passw, uint8_t groups);
+user_t *_create_user(char *username, char *passw, uint8_t groups);
 void _free_user(user_t *user);
 
 int _add_user(user_t *user);

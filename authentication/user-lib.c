@@ -4,12 +4,12 @@
 #include "user-lib.h"
 #include "user-internal.h"
 
-int register_user(uint32_t uid, char *username, char *passw, uint8_t groups) {
-    user_t *user = _create_user(uid, username, passw, groups);
+int register_user(char *username, char *passw, uint8_t groups) {
+    user_t *user = _create_user(username, passw, groups);
 
     if (_add_user(user)) return 1;
 
-    fprintf(stderr, "%s(): failed to register user %u (already exists?)\n", __func__, uid);
+    fprintf(stderr, "%s(): failed to register user %u (already exists?)\n", __func__, user->uid);
     _free_user(user);
     return 0;
 }
