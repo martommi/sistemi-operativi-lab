@@ -7,7 +7,7 @@
 static user_t *head = NULL;
 static uint32_t uid = 0;
 
-user_t *_create_user(char *username, char *passw, uint8_t groups) {
+user_t *_create_user(char *username, char *passw, Privileges privileges) {
     user_t *user;
     if (!(user = (user_t *)malloc(sizeof(user_t)))) {
         perror("malloc()");
@@ -17,7 +17,7 @@ user_t *_create_user(char *username, char *passw, uint8_t groups) {
     user->uid = uid++;
     user->username = strdup(username);
     user->password = strdup(passw);
-    user->groups = groups;
+    user->privileges = privileges;
     user->next = NULL;
 
     return user;

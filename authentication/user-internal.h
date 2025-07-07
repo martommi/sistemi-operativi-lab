@@ -2,16 +2,17 @@
 #define USER_INTERNAL_H
 
 #include <stdint.h>
+#include "privileges.h"
 
 typedef struct user {
     uint32_t uid;
     char *username;
     char *password;
-    uint8_t groups;
+    Privileges privileges;
     struct user *next;
 } user_t;
 
-user_t *_create_user(char *username, char *passw, uint8_t groups);
+user_t *_create_user(char *username, char *passw, Privileges privileges);
 void _free_user(user_t *user);
 
 int _add_user(user_t *user);

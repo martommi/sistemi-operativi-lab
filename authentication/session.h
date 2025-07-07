@@ -2,17 +2,12 @@
 #define SESSION_H
 
 #include <stdint.h>
+#include "privileges.h"
 
 #define DEFAULT_PORT 12345
 #define LOCALHOST "127.0.0.1"
 
 typedef struct user user_t;
-
-typedef enum Priviliges { // qualche dubbio se rivedere i gruppi utente o questa TODO
-    PRIVILEGES_ADMIN = (1 << 0),
-    PRIVILEGES_GUEST = (1 << 1),
-    PRIVILEGES_SUPPORT_AGENT = (1 << 2)
-} Privileges;
 
 typedef struct session {
     int fd;

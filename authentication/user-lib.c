@@ -4,8 +4,8 @@
 #include "user-lib.h"
 #include "user-internal.h"
 
-int register_user(char *username, char *passw, uint8_t groups) {
-    user_t *user = _create_user(username, passw, groups);
+int register_user(char *username, char *passw, Privileges privileges) {
+    user_t *user = _create_user(username, passw, privileges);
 
     if (_add_user(user)) return 1;
 
@@ -36,16 +36,16 @@ int authenticate(const char *username, const char *passw) {
     return _authenticate(username, passw);
 }
 
-int user_in_group(const user_t *user, uint8_t group) {
-    return (user->groups & group) != 0;
+int user_in_group(const user_t *user, Privileges privileges) {
+    return (user->privileges & privileges) != 0;
 }
 
-void user_add_group(user_t *user, uint8_t group) {
-    user->groups |= group;
+void user_add_group(user_t *user, Privileges privileges) {
+    user->privileges |= privileges;
 }
 
-void user_remove_group(user_t *user, uint8_t group) {
-    user->groups &= ~group;
+void user_remove_group(user_t *user, Privileges privileges) {
+    user->privileges &= ~privileges;
 }
 
 void save_users(const char *filename) {
