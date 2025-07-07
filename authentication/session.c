@@ -1,13 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "./session.h"
+#include "session.h"
 #include "user-lib.h"
 
-session_t *start_session(int fd, user_t *user, int logged_in, Privileges privileges) {
+session_t *create_session(int fd, user_t *user, int logged_in, Privileges privileges) {
     if (fd < 0) {
-        printf("start_session(): file descriptor is a required field, please provide it.");
+        fprintf(stderr,"%s(): file descriptor is a required field, please provide it.", __func__);
         exit(EXIT_FAILURE);
     }
 
@@ -27,7 +28,13 @@ session_t *start_session(int fd, user_t *user, int logged_in, Privileges privile
     return session;
 }
 
+void start_session(session_t *session) {
+    //TODO separa responsabilità in gestore input
+    //fa quello che fa client handle nel vecchio
+}
+
 void end_session(session_t *session) {
+    close(session->fd);
     free(session);
 }
 

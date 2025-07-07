@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "./session.h"
+#include "./authentication/session.h"
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr;
