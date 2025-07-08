@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,12 +47,12 @@ int _add_user(user_t *user) {
     return 1;
 }
 
-int _remove_user(user_t *user) {
+int _remove_user(uint32_t uid) {
     user_t *curr = head;
     user_t *prev = NULL;
 
     while (curr) {
-        if (curr->uid == user->uid) {
+        if (curr->uid == uid) {
             if (prev == NULL) {
                 head = curr->next;
             } else {
@@ -84,19 +85,19 @@ int _find_users(const char *username, int limit, user_t **found) {
     return count;
 }
 
-int _authenticate(const char *username, const char *passw) {
+user_t *_authenticate(const char *username, const char *passw) {
     user_t *curr = head;
 
     while (curr) {
         if (strcmp(curr->username, username) == 0 &&
             strcmp(curr->password, passw) == 0) {
-            return 1;
+            return curr;
         }
 
         curr = curr->next;
     }
 
-    return 0;
+    return NULL;
 }
 
 int _count_users() {

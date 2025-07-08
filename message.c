@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <unistd.h>
 
 #include "message.h"
 
@@ -17,6 +17,10 @@ message_t *create_message(size_t size, char **content) {
     message->content = content;
 
     return message;
+}
+
+message_t *create_message_from_str(const char *str) {
+    return create_message(1, (char *[]){ (char *)str });
 }
 
 void free_message(message_t *message) {
@@ -34,14 +38,32 @@ void free_message(message_t *message) {
 }
 
 void write_message(int fd, message_t *message) {
-    send(fd, &(message->size), sizeof(message->size), 0);    // Let the receiver know how much to read BEFORE sending any actual data
+    write(fd, &message->size, sizeof(size_t));
 
-    for (int i = 0; i < message->size; i++) {
-        send(fd, message->content[i], strlen(message->content[i]), 0); //TODO
-        send(fd, "\n", 1, 0);
+    for (size_t i = 0; i < message->size; i++) {
+        size_t len = strlen(message->content[i]) + 1;
+        write(fd, &len, sizeof(size_t));
+        write(fd, message->content[i], len);
     }
 }
 
-void read_message(int fd, message_t **message) {
-    //TODO recv
+void read_message(int fd, message_t **msg_out) { //TODO memory leak
+    message_t *msg;
+    if ((msg = (message_t *)malloc(sizeof(message_t)))) {
+        perror("malloc()");
+        exit(EXIT_FAILURE);
+    }
+
+    read(fd, &msg->size, sizeof(size_t));
+
+    msg->content = malloc(sizeof(char*) * msg->size);
+    for (size_t i = 0; i < msg->size; i++) {
+        size_t len;
+        read(fd, &len, sizeof(size_t));
+
+        msg->content[i] = malloc(len);
+        read(fd, msg->content[i], len);
+    }
+
+    *msg_out = msg;
 }

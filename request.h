@@ -19,7 +19,6 @@ typedef enum RequestCode {
 
 typedef struct request {
     RequestCode code;
-    // void (*request)(int fd);
     message_t *payload;
 } request_t;
 

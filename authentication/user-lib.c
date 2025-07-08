@@ -14,8 +14,8 @@ int register_user(char *username, char *passw, Privileges privileges) {
     return 0;
 }
 
-int remove_user(user_t *user) {
-    return _remove_user(user);
+int remove_user(uint32_t uid) {
+    return _remove_user(uid);
 }
 
 int find_users(const char *username, int limit, user_t **found) {
@@ -27,10 +27,10 @@ int find_users(const char *username, int limit, user_t **found) {
     return _find_users(username, limit, found);
 }
 
-int authenticate(const char *username, const char *passw) {
+user_t *authenticate(const char *username, const char *passw) {
     if (!username || !passw) {
         fprintf(stderr, "%s(): invalid arguments\n", __func__);
-        return -1;
+        return NULL;
     }
     
     return _authenticate(username, passw);

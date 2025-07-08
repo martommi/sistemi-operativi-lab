@@ -5,6 +5,7 @@
 
 #include "session.h"
 #include "user-lib.h"
+#include "user-internal.c"
 
 session_t *create_session(int fd, user_t *user, int logged_in, Privileges privileges) {
     if (fd < 0) {
@@ -38,13 +39,18 @@ void end_session(session_t *session) {
     free(session);
 }
 
-int login(session_t *session, char *username, char *passw) {
-    if (!authenticate(username, passw)) {
+user_t *login(session_t *session, char *username, char *passw) {
+    user_t *authenticated;
+    if (!(authenticated = authenticate(username, passw))) {
         fprintf(stderr, "%s(): wrong credentials.", __func__);
         return 0;
     }
 
-    return session->logged_in = 1;
+    session->logged_in = 1;
+    session->user = authenticated;
+    session->privileges = authenticated->privileges;
+
+    return authenticated;
 }
 
 void logout(session_t *session) {

@@ -20,7 +20,7 @@ session_t *create_session(int fd, user_t *user, int logged_in, Privileges privil
 void start_session(session_t *session);
 void end_session(session_t *session);
 
-int login(session_t *session, char *username, char *passw);
+user_t *login(session_t *session, char *username, char *passw);
 void logout(session_t *session);
 int is_logged_in(session_t *session);
 int has_privileges(session_t *session, Privileges privileges);

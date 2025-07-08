@@ -19,10 +19,10 @@ typedef enum ResponseCode {
 
 typedef struct response {
     ResponseCode code;
-    // void (*response)(session_t *, message_t *);
     message_t *payload;
 } response_t;
 
-// una lista di funzioni per interagire con la libreria dei ticket e restituire al client
+response_t *create_response(ResponseCode code, message_t *msg);
+void free_response(response_t *response);
 
 #endif /* RESPONSE_H */
