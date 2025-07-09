@@ -48,10 +48,10 @@ void revoke_privileges(user_t *user, Privileges privileges) {
     user->privileges &= ~privileges;
 }
 
-void save_users(const char *filename) {
-    _save_users(filename);
+int save_users(const char *filename) {
+   return _save_users(filename);
 }
 
-void load_users(const char *filename) {
-    _load_users(filename);
+int load_users(const char *filename) {
+   return _load_users(filename);
 }

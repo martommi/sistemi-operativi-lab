@@ -15,7 +15,7 @@ int has_privileges(const user_t *user, Privileges privileges);
 void grant_privileges(user_t *user, Privileges privileges);
 void revoke_privileges(user_t *user, Privileges privileges);
 
-void save_users(const char *filename);
-void load_users(const char *filename);
+int save_users(const char *filename);
+int load_users(const char *filename);
 
 #endif /* USER_LIB_H */

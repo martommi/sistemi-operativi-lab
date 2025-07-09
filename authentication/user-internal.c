@@ -112,10 +112,10 @@ int _count_users() {
     return count;
 }
 
-void _save_users(const char *filename) {
+int _save_users(const char *filename) {
     //todo
 }
 
-void _load_users(const char *filename) {
+int _load_users(const char *filename) {
     //todo
 }
