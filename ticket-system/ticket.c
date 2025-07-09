@@ -3,137 +3,64 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./ticket.h"
+#include "ticket.h"
+#include "ticket-internal.h"
 
-static ticket_t *head = NULL;
+int open_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
+    ticket_t *ticket = _create_ticket(title, desc, date, priority, status, support_agent);
 
-ticket_t *create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
-    if (!title && !desc) {
-        printf("create_ticket(): Title and Description are required fields, please provide them.");
-        exit(EXIT_FAILURE);
-    }
+    if (_add_ticket(ticket)) return 1;
 
-    ticket_t *ticket;
-    if (!(ticket = (ticket_t *)malloc(sizeof(ticket_t)))) {
-        perror("malloc()");
-        exit(EXIT_FAILURE);
-    }
-
-    memset(ticket, 0, sizeof(ticket_t));
-
-    ticket->title = title;
-    ticket->description = desc;
-    ticket->date = date;
-    ticket->priority = priority;
-    ticket->status = status;
-    ticket->support_agent = support_agent;
-    ticket->next = NULL;
-
-    return ticket;
+    fprintf(stderr, "%s(): failed adding new ticket (already exists?)", __func__);
+    _free_ticket(ticket);
+    return 0;
 }
 
-void free_ticket(ticket_t *target) {
-    if (!target) {
-        printf("free_ticket(): received NULL pointer.");
-        exit(EXIT_FAILURE);
-    }
-
-    free(target->title);
-    free(target->description);
-    free(target->date);
-    free(target);
+int delete_ticket(ticket_t *ticket) {
+    //TODO
 }
 
-int get_tickets(ticket_t **destination, ticket_filter filter, ...) {
-    ticket_t *current = head;
-    int count = 0;
+int count_tickets() {
+    return _count_tickets();
+}
 
-    va_list args;
-    va_start(args, filter);
+int assign_ticket(ticket_t *ticket, user_t *support_agent) {
+    return _set_support_agent(ticket, support_agent);
+}
 
-    while (current) {
-        int match = 1;
-
-        if (filter != NULL) {
-            va_list args_copy;
-            va_copy(args_copy, args);
-            match = filter(current, args_copy);
-            va_end(args_copy);
-        }
-
-        if (match) {
-            destination[count++] = current;
-        }
-
-        current = current->next;
-    }
-
-    va_end(args);
-    return count;
+int update_status(ticket_t *ticket, TicketStatus new_status) {
+    return _set_status(ticket, new_status);
 }
 
 int get_all_tickets(ticket_t **destination) {
-    return get_tickets(destination, NULL);
+    return _get_tickets(destination, NULL);
 }
 
-int get_by_priority(const ticket_t *target, va_list args) {
-    TicketPriority priority = va_arg(args, TicketPriority);
-    return (target->priority == priority);
+int get_tickets_by_priority(ticket_t **dest, TicketPriority priority) {
+    return _get_tickets(dest, get_by_priority, priority);
 }
 
-int get_by_status(const ticket_t *target, va_list args) {
-    TicketStatus status = va_arg(args, TicketStatus);
-    return (target->status == status);
+int get_tickets_by_status(ticket_t **dest, TicketStatus status) {
+    return _get_tickets(dest, get_by_status, status);
 }
 
-int get_by_title(const ticket_t *target, va_list args) {
-    const char *query = va_arg(args, const char *);
-    TitleMatchMode mode = va_arg(args, TitleMatchMode);
-
-    switch (mode) {
-        case TITLE_MATCH_EXACT:
-            return strcmp(target->title, query) == 0;
-
-        case TITLE_MATCH_CONTAINS:
-            return strstr(target->title, query) != NULL;
-
-        case TITLE_MATCH_STARTS_WITH:
-            return strncmp(target->title, query, strlen(query)) == 0;
-
-        default:
-            return 0;
-    }
+int get_tickets_by_support_agent(ticket_t **dest, user_t *support_agent) {
+    return _get_tickets(dest, get_by_support_agent, support_agent);
 }
 
-int get_by_date(const ticket_t *target, va_list args) {
-    const char *ticket_date = target->date;
-    if (!ticket_date) return 0;
-
-    DateMatchMode mode = va_arg(args, DateMatchMode);
-
-    switch (mode) {
-        case DATE_MATCH_EXACT: {
-            const char *target = va_arg(args, const char *);
-            return strcmp(ticket_date, target) == 0;
-        }
-
-        case DATE_MATCH_BEFORE: {
-            const char *target = va_arg(args, const char *);
-            return strcmp(ticket_date, target) < 0;
-        }
-
-        case DATE_MATCH_AFTER: {
-            const char *target = va_arg(args, const char *);
-            return strcmp(ticket_date, target) > 0;
-        }
-
-        case DATE_MATCH_RANGE: {
-            const char *start = va_arg(args, const char *);
-            const char *end = va_arg(args, const char *);
-            return strcmp(ticket_date, start) >= 0 && strcmp(ticket_date, end) <= 0;
-        }
-
-        default:
-            return 0;
-    }
+int get_tickets_by_title(ticket_t **dest, const char *query, TitleMatchMode mode) {
+    return _get_tickets(dest, get_by_title, query, mode);
 }
+
+int get_tickets_by_date(ticket_t **dest, DateMatchMode mode, const char *arg1, const char *arg2) {
+    return _get_tickets(dest, get_by_date, arg1, arg2);
+}
+
+int save_tickets(const char *filename) {
+    //TODO
+}
+
+int load_tickets(const char *filename) {
+    //TODO
+}
+
