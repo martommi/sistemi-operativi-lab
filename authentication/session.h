@@ -17,7 +17,6 @@ typedef struct session {
 } session_t;
 
 session_t *create_session(int fd, user_t *user, int logged_in, Privileges privileges);
-void start_session(session_t *session);
 void end_session(session_t *session);
 
 user_t *login(session_t *session, char *username, char *passw);

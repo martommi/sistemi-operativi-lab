@@ -1,6 +1,9 @@
+#include <stdint.h>
+#include <stdarg.h>
 #include "ticket.h"
 
 typedef struct ticket {
+    uint32_t tid;
     char *title;
     char *description;
     char *date;                // YYYY-MM-DD
@@ -21,6 +24,7 @@ int get_by_status(const ticket_t *target, va_list args);
 int get_by_support_agent(const ticket_t *target, va_list args);
 int get_by_title(const ticket_t *target, va_list args);
 int get_by_date(const ticket_t *target, va_list args);
+int get_by_tid(const ticket_t *target, va_list args);
 
 int _add_ticket(ticket_t *ticket);
 int _remove_ticket(ticket_t *ticket);

@@ -1,6 +1,9 @@
 #include "ticket-internal.h"
+#include "ticket.h"
+#include <stdint.h>
 
 static ticket_t *head = NULL;
+static uint32_t tid = 1;
 
 ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
     if (!title && !desc) {
@@ -16,6 +19,7 @@ ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority pri
 
     memset(ticket, 0, sizeof(ticket_t));
 
+    ticket->tid = tid++;
     ticket->title = title;
     ticket->description = desc;
     ticket->date = date;
@@ -127,4 +131,9 @@ int get_by_date(const ticket_t *target, va_list args) {
         default:
             return 0;
     }
+}
+
+int get_by_tid(const ticket_t *target, va_list args) {
+    uint32_t tid = va_arg(args, uint32_t);
+    return target->tid == tid;
 }

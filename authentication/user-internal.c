@@ -71,7 +71,7 @@ int _remove_user(uint32_t uid) {
     return 0;
 }
 
-int _find_users(const char *username, int limit, user_t **found) {
+int _find_users(const char *username, int limit, user_t **found) { //TODO alloca
     user_t *curr = head;
     int count = 0;
 

@@ -6,6 +6,9 @@
 #include <arpa/inet.h>
 
 #include "./authentication/session.h"
+#include "protocol.h"
+#include "request.h"
+#include "response.h"
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr;
@@ -47,5 +50,16 @@ int main(int argc, char *argv[]) {
 
     printf("You are connected with the server.");
 
-    // TODO
+    request_t *req; //TODO alloca dentro al ciclo
+    response_t *resp;
+
+    while (1) {
+        //ciclo di richieste TODO
+        send_request(sock, req);
+        recv_response(sock, &resp);
+        // handle_response
+    }
+    
+    close(sock);
+    return 0;
 }

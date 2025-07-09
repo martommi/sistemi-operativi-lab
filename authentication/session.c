@@ -29,11 +29,6 @@ session_t *create_session(int fd, user_t *user, int logged_in, Privileges privil
     return session;
 }
 
-void start_session(session_t *session) {
-    //TODO separa responsabilità in gestore input
-    //fa quello che fa client handle nel vecchio
-}
-
 void end_session(session_t *session) {
     close(session->fd);
     free(session);

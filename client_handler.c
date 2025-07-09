@@ -3,6 +3,9 @@
 
 #include "authentication/session.h"
 #include "authentication/privileges.h"
+#include "protocol.h"
+#include "request.h"
+#include "server-dispatcher.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -18,6 +21,10 @@ int main(int argc, char* argv[]) {
     }
 
     session_t *session = create_session(client_sock, NULL, 0, PRIVILEGES_GUEST);
-    start_session(session);
+
+    request_t *req;
+    recv_request(client_sock, &req);
+    handle_request(session, req);
+
     end_session(session);
 }
