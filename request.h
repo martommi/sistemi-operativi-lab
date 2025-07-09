@@ -8,12 +8,27 @@
 #include "message.h"
 
 typedef enum RequestCode {
+    /* Authentication and user management */
     REQ_LOGIN,
     REQ_LOGOUT,
+    REQ_REGISTER_USER,
+    REQ_REMOVE_USER,
+    REQ_FIND_USER,
+    REQ_SAVE_USERS,
+    REQ_LOAD_USERS,
+    /* Ticket management */
+    REQ_OPEN_TICKET,
+    REQ_DELETE_TICKET,
+    REQ_ASSIGN_TICKET,
+    REQ_UPDATE_TICKET_STATUS,
     REQ_GET_ALL_TICKETS,
-    REQ_GET_TICKETS_BY_PRIORITY,
-    REQ_CREATE_TICKET,
-    REQ_UPDATE_STATUS,
+    REQ_TICKET_FILTER_PRIORITY,
+    REQ_TICKET_FILTER_STATUS,
+    REQ_TICKET_FILTER_SUPPORT_AGENT,
+    REQ_TICKET_FILTER_TITLE,
+    REQ_TICKET_FILTER_DATE,
+    REQ_SAVE_TICKETS,
+    REQ_LOAD_TICKETS
     // altri...
 } RequestCode;
 

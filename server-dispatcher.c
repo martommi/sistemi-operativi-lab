@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "server-dispatcher.h"
 #include "authentication/session.h"
 #include "authentication/user-lib.h"
@@ -5,13 +7,32 @@
 #include "protocol.h"
 #include "request.h"
 #include "response.h"
-#include <stdlib.h>
 
 typedef response_t *(*handler)(session_t *, message_t *);
 
 static handler handlers[] = {
-    [REQ_LOGIN] = handle_login,
-    [REQ_LOGOUT] = handle_logout
+    [REQ_LOGIN]                      = handle_login,
+    [REQ_LOGOUT]                     = handle_logout,
+    [REQ_REGISTER_USER]             = handle_register_user,
+    [REQ_REMOVE_USER]               = handle_remove_user,
+    [REQ_FIND_USER]                 = handle_find_users,
+    [REQ_SAVE_USERS]                = handle_save_users,
+    [REQ_LOAD_USERS]                = handle_load_users,
+
+    [REQ_OPEN_TICKET]               = handle_create_ticket,
+    [REQ_DELETE_TICKET]             = NULL, // handle_delete_ticket da implementare
+    [REQ_ASSIGN_TICKET]             = NULL, // handle_assign_ticket da implementare
+    [REQ_UPDATE_TICKET_STATUS]      = NULL, // handle_update_ticket_status da implementare
+    [REQ_GET_ALL_TICKETS]           = handle_get_all_tickets,
+
+    [REQ_TICKET_FILTER_PRIORITY]    = NULL, // handle_filter_by_priority da implementare
+    [REQ_TICKET_FILTER_STATUS]      = NULL, // handle_filter_by_status da implementare
+    [REQ_TICKET_FILTER_SUPPORT_AGENT] = NULL, // handle_filter_by_support_agent da implementare
+    [REQ_TICKET_FILTER_TITLE]       = NULL, // handle_filter_by_title da implementare
+    [REQ_TICKET_FILTER_DATE]        = NULL, // handle_filter_by_date da implementare
+
+    [REQ_SAVE_TICKETS]              = NULL, // handle_save_tickets da implementare
+    [REQ_LOAD_TICKETS]              = NULL  // handle_load_tickets da implementare
 };
 
 void handle_request(session_t *session, request_t *req) {
@@ -79,4 +100,15 @@ response_t *handle_find_users(session_t *session, message_t *msg) {
     return result;
 }
 
+response_t *handle_save_users(session_t *session, message_t *msg) {
+    return save_users(msg->content[0])
+        ? create_response(RESP_OK, NULL)
+        : create_response(RESP_ERROR, NULL);
+}
+
+response_t *handle_load_users(session_t *session, message_t *msg) {
+    return load_users(msg->content[0])
+        ? create_response(RESP_OK, NULL)
+        : create_response(RESP_ERROR, NULL);
+}
 

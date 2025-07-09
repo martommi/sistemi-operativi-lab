@@ -14,9 +14,6 @@ response_t *handle_logout(session_t *session, message_t *msg);
 response_t *handle_register_user(session_t *session, message_t *msg);
 response_t *handle_remove_user(session_t *session, message_t *msg);
 response_t *handle_find_users(session_t *session, message_t *msg);
-response_t *handle_user_in_group(session_t *session, message_t *msg);
-response_t *handle_user_add_group(session_t *session, message_t *msg);
-response_t *handle_user_remove_group(session_t *session, message_t *msg);
 response_t *handle_save_users(session_t *session, message_t *msg);
 response_t *handle_load_users(session_t *session, message_t *msg);
 
