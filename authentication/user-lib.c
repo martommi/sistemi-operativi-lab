@@ -36,15 +36,15 @@ user_t *authenticate(const char *username, const char *passw) {
     return _authenticate(username, passw);
 }
 
-int user_in_group(const user_t *user, Privileges privileges) {
+int has_privileges(const user_t *user, Privileges privileges) {
     return (user->privileges & privileges) != 0;
 }
 
-void user_add_group(user_t *user, Privileges privileges) {
+void grant_privileges(user_t *user, Privileges privileges) {
     user->privileges |= privileges;
 }
 
-void user_remove_group(user_t *user, Privileges privileges) {
+void revoke_privileges(user_t *user, Privileges privileges) {
     user->privileges &= ~privileges;
 }
 

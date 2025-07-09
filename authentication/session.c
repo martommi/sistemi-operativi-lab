@@ -61,6 +61,6 @@ int is_logged_in(session_t *session) {
     return session->logged_in;
 }
 
-int has_privileges(session_t *session, Privileges privileges) {
+int session_has_privileges(session_t *session, Privileges privileges) {
     return session->privileges == privileges;
 }
