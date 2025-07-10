@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "user-internal.h"
+#include "privileges.h"
+#include "../utils.h"
 
 static user_t *head = NULL;
 static uint32_t uid = 0;
@@ -101,13 +103,9 @@ user_t *_authenticate(const char *username, const char *passw) {
 }
 
 int _count_users() {
-    user_t *curr = head;
-    int count = 0;
-
-    while (curr) {
+    int count;
+    for (user_t *cur = head; cur; cur = cur->next)
         count++;
-        curr = curr->next;
-    }
 
     return count;
 }
@@ -150,10 +148,63 @@ char *_print_user(const user_t *u) {
     return str;
 }
 
+void _serialize_user(FILE *fp, const user_t *u) {
+    fwrite(&u->uid, sizeof(uint32_t), 1, fp);
+    serialize_string(fp, u->username);
+    serialize_string(fp, u->password);
+    fwrite(&u->privileges, sizeof(Privileges), 1, fp);
+}
+
+user_t *_deserialize_user(FILE *fp) {
+    user_t *user = malloc(sizeof(user_t));
+    if (!user) {
+        perror("malloc()");
+        exit(EXIT_FAILURE);
+    }
+
+    fread(&user->uid, sizeof(uint32_t), 1, fp);
+    user->username = deserialize_string(fp);
+    user->password = deserialize_string(fp);
+    fread(&user->privileges, sizeof(Privileges), 1, fp);
+    return user;
+}
+
 int _save_users(const char *filename) {
-    //todo
+    FILE *fp = fopen(filename, "w");
+    if (!fp) {
+        perror("fopen()");
+        return -1;
+    }
+
+    int count = _count_users();
+    fwrite(&count, sizeof(int), 1, fp);
+
+    user_t *current = head;
+    while (current) {
+        _serialize_user(fp, current);
+        current = current->next;
+    }
+
+    fclose(fp);
+    return 1;
 }
 
 int _load_users(const char *filename) {
-    //todo
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("fopen()");
+        return -1;
+    }
+
+    int count;
+    fread(&count, sizeof(int), 1, fp);
+
+    while (count > 0) {
+        user_t *user = _deserialize_user(fp);
+        _add_user(user);
+        count--;
+    }
+
+    fclose(fp);
+    return 1;
 }
