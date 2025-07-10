@@ -144,11 +144,63 @@ int get_by_tid(const ticket_t *target, va_list args) {
     return target->tid == tid;
 }
 
-int _add_ticket(ticket_t *ticket);
-int _remove_ticket(ticket_t *ticket);
-int _count_tickets();
-int _set_support_agent(ticket_t *ticket, user_t *support_agent);
-int _set_status(ticket_t *ticket, TicketStatus new_status);
+int _add_ticket(ticket_t *ticket) {
+    ticket_t *curr = head;
+
+    while (curr) {
+        if (curr->tid == ticket->tid) {
+            fprintf(stderr, "%s(): ticket with TID %u already registered.\n", __func__, ticket->tid);
+            return 0;
+        }
+        
+        curr = curr->next;
+    }
+
+    ticket->next = head;
+    head = ticket;
+    return 1;
+}
+
+int _remove_ticket(ticket_t *ticket) {
+    ticket_t *curr = head;
+    ticket_t *prev = NULL;
+
+    while (curr) {
+        if (curr->tid == tid) {
+            if (prev == NULL) {
+                head = curr->next;
+            } else {
+                prev->next = curr->next;
+            }
+
+            _free_ticket(curr);
+            return 1;
+        }
+
+        prev = curr;
+        curr = curr->next;
+    }
+
+    fprintf(stderr, "%s(): trying to remove non-existing ticket.\n", __func__);
+    return 0;
+}
+
+int _count_tickets() {
+    int count;
+    for (ticket_t *cur = head; cur; cur = cur->next)
+        count++;
+
+    return count;
+}
+
+int _set_support_agent(ticket_t *ticket, user_t *support_agent) {
+    ticket->support_agent = support_agent;
+    return 1;
+}
+
+int _set_status(ticket_t *ticket, TicketStatus new_status) {
+    return ticket->status = new_status;
+}
 
 char *_print_ticket(const ticket_t *t) {
     size_t len = snprintf(NULL, 0, 

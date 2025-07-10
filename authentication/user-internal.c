@@ -69,7 +69,7 @@ int _remove_user(uint32_t uid) {
         curr = curr->next;
     }
 
-    // fprintf(stderr, "%s(): trying to remove non-existing user.\n", __func__);
+    fprintf(stderr, "%s(): trying to remove non-existing user.\n", __func__);
     return 0;
 }
 
