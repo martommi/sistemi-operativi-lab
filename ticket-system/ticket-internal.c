@@ -1,6 +1,10 @@
 #include "ticket-internal.h"
+#include "../authentication/user-internal.h"
 #include "ticket.h"
+#include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 static ticket_t *head = NULL;
 static uint32_t tid = 1;
@@ -136,4 +140,41 @@ int get_by_date(const ticket_t *target, va_list args) {
 int get_by_tid(const ticket_t *target, va_list args) {
     uint32_t tid = va_arg(args, uint32_t);
     return target->tid == tid;
+}
+
+char *_print_ticket(const ticket_t *t) {
+    size_t len = snprintf(NULL, 0, 
+        "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
+        t->tid,
+        t->title,
+        t->description,
+        t->date,
+        t->priority,
+        t->status,
+        t->support_agent->username != NULL ? t->support_agent->username : "NULL"
+    );
+
+    char *str = calloc(1, len + 1);
+    if (str == NULL) {
+        perror("calloc()");
+        return NULL;
+    }
+
+    if (snprintf(NULL, 0, 
+        "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
+        t->tid,
+        t->title,
+        t->description,
+        t->date,
+        t->priority,
+        t->status,
+        t->support_agent->username != NULL ? t->support_agent->username : "N.A."
+    ) > len + 1) {
+
+        fprintf(stderr, "%s() error: snprintf returned truncated result.", __func__);
+        free(str);
+        return NULL;
+    }
+
+    return str;
 }

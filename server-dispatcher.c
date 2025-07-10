@@ -207,14 +207,26 @@ response_t *handle_filter_by_priority(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    ticket_t *tickets[atoi(msg->content[1])];
+    int limit = atoi(msg->content[1]);
+    int count;
+    ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
+    if (!tickets) {
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Memory allocation failed."));
+    }
     
-    if (!get_tickets_by_priority(tickets, atoi(msg->content[0]))) {
+    if ((count = get_tickets_by_priority(tickets, atoi(msg->content[0]))) <= 0) {
         return create_response(RESP_OK, create_message_from_str("[TICKET] no ticket found."));
     }
 
-    message_t *out;
-    // print tickets to message out content
+    count = count < limit ? count : limit;
+    char **content = malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        content[i] = ticket_to_string(tickets[i]);
+    }
+    
+    free(tickets);
+    message_t *out = create_message(count, content);
+
     return create_response(RESP_OK, out);
 }
 
@@ -223,14 +235,26 @@ response_t *handle_filter_by_status(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    ticket_t *tickets[atoi(msg->content[1])];
+    int limit = atoi(msg->content[1]);
+    int count;
+    ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
+    if (!tickets) {
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Memory allocation failed."));
+    }
     
-    if (!get_tickets_by_status(tickets, atoi(msg->content[0]))) {
+    if ((count = get_tickets_by_status(tickets, atoi(msg->content[0]))) <= 0) {
         return create_response(RESP_OK, create_message_from_str("[TICKET] no ticket found."));
     }
 
-    message_t *out;
-    // print tickets to message out content
+    count = count < limit ? count : limit;
+    char **content = malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        content[i] = ticket_to_string(tickets[i]);
+    }
+    
+    free(tickets);
+    message_t *out = create_message(count, content);
+
     return create_response(RESP_OK, out);
 }
 
@@ -242,14 +266,25 @@ response_t *handle_filter_by_support_agent(session_t *session, message_t *msg) {
     user_t *user[1];
     find_users(msg->content[0], 1, user);
 
-    ticket_t *tickets[atoi(msg->content[1])];
+    int limit = atoi(msg->content[1]);
+    int count;
+    ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
+    if (!tickets) {
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Memory allocation failed."));
+    }
     
-    if (!get_tickets_by_support_agent(tickets, user[0])) {
+    if ((count = get_tickets_by_support_agent(tickets, user[0])) <= 0) {
         return create_response(RESP_OK, create_message_from_str("[TICKET] no ticket found."));
     }
 
-    message_t *out;
-    // print tickets to message out content
+    count = count < limit ? count : limit;
+    char **content = malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        content[i] = ticket_to_string(tickets[i]);
+    }
+
+    free(tickets);
+    message_t *out = create_message(count, content);
     return create_response(RESP_OK, out);
 }
 
@@ -258,30 +293,54 @@ response_t *handle_filter_by_title(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    ticket_t *tickets[atoi(msg->content[2])];
+    int limit = atoi(msg->content[2]);
+    int count;
+    ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
+    if (!tickets) {
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Memory allocation failed."));
+    }
     
-    if (!get_tickets_by_title(tickets, msg->content[0], atoi(msg->content[1]))) {
+    if ((count = get_tickets_by_title(tickets, msg->content[0], atoi(msg->content[1]))) <= 0) {
         return create_response(RESP_OK, create_message_from_str("[TICKET] no ticket found."));
     }
 
-    message_t *out;
-    // print tickets to message out content
+    count = count < limit ? count : limit;
+    char **content = malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        content[i] = ticket_to_string(tickets[i]);
+    }
+    
+    free(tickets);
+    message_t *out = create_message(count, content);
+
     return create_response(RESP_OK, out);
 }
 
 response_t *handle_filter_by_date(session_t *session, message_t *msg) {
-    if (!msg->content[0] || !msg->content[1] || msg->content[2]) {
+    if (!msg->content[0] || !msg->content[1] || !msg->content[2] || !msg->content[3]) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    ticket_t *tickets[atoi(msg->content[1])];
+    int limit = atoi(msg->content[3]);
+    int count;
+    ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
+    if (!tickets) {
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Memory allocation failed."));
+    }
     
-    if (!get_tickets_by_date(tickets, atoi(msg->content[0]), msg->content[1], msg->content[2])) {
+    if ((count = get_tickets_by_date(tickets, atoi(msg->content[0]), msg->content[1], msg->content[2])) <= 0) {
         return create_response(RESP_OK, create_message_from_str("[TICKET] no ticket found."));
     }
 
-    message_t *out;
-    // print tickets to message out content
+    count = count < limit ? count : limit;
+    char **content = malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        content[i] = ticket_to_string(tickets[i]);
+    }
+    
+    free(tickets);
+    message_t *out = create_message(count, content);
+
     return create_response(RESP_OK, out);
 }
 
