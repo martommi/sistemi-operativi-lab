@@ -37,6 +37,7 @@ typedef struct request {
     message_t *payload;
 } request_t;
 
-// una serie di funzioni per interagire con la lista dei ticket
+request_t *create_request(RequestCode code, message_t *msg);
+void free_request(request_t *response);
 
 #endif /* REQUEST_H */

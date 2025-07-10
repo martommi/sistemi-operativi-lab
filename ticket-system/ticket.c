@@ -70,10 +70,10 @@ char *ticket_to_str(const ticket_t *ticket) {
 }
 
 int save_tickets(const char *filename) {
-    //TODO
+    return _save_tickets(filename);
 }
 
 int load_tickets(const char *filename) {
-    //TODO
+    return _load_tickets(filename);
 }
 

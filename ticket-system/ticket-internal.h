@@ -33,5 +33,5 @@ int _set_support_agent(ticket_t *ticket, user_t *support_agent);
 int _set_status(ticket_t *ticket, TicketStatus new_status);
 char *_print_ticket(const ticket_t *ticket);
 
-int _save_ticket(const char *filename);
-int _load_ticket(const char *filename);
+int _save_tickets(const char *filename);
+int _load_tickets(const char *filename);

@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static ticket_t *head = NULL;
@@ -177,4 +178,160 @@ char *_print_ticket(const ticket_t *t) {
     }
 
     return str;
+}
+
+int write_string(FILE *fp, const char *str) {
+    uint32_t len = strlen(str);
+    if (fwrite(&len, sizeof(uint32_t), 1, fp) != 1) return 0;
+    if (fwrite(str, sizeof(char), len, fp) != len) return 0;
+    return 1;
+}
+
+int write_user(FILE *fp, const user_t *u) {
+    if (!u) {
+        uint8_t null_flag = 1;
+        fwrite(&null_flag, sizeof(uint8_t), 1, fp);
+        return 1;
+    } else {
+        uint8_t null_flag = 0;
+        fwrite(&null_flag, sizeof(uint8_t), 1, fp);
+    }
+
+    if (fwrite(&u->uid, sizeof(uint32_t), 1, fp) != 1) return 0;
+    return write_string(fp, u->username);
+}
+
+int save_ticket_list(FILE *fp, ticket_t *head) {
+    ticket_t *current = head;
+    while (current) {
+        // Write primitive fields
+        if (fwrite(&current->tid, sizeof(uint32_t), 1, fp) != 1) return 0;
+        if (!write_string(fp, current->title)) return 0;
+        if (!write_string(fp, current->description)) return 0;
+        if (!write_string(fp, current->date)) return 0;
+        if (fwrite(&current->priority, sizeof(TicketPriority), 1, fp) != 1) return 0;
+        if (fwrite(&current->status, sizeof(TicketStatus), 1, fp) != 1) return 0;
+
+        // Write user (support agent)
+        if (!write_user(fp, current->support_agent)) return 0;
+
+        // Flag for whether there is a next node
+        uint8_t has_next = current->next != NULL;
+        if (fwrite(&has_next, sizeof(uint8_t), 1, fp) != 1) return 0;
+
+        current = current->next;
+    }
+    return 1;
+}
+
+int _save_tickets(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        perror("fopen()");
+        return -1;
+    }
+
+    if (!save_ticket_list(file, head)) {
+        fprintf(stderr, "%s(): error saving ticket list.", __func__);
+        return -1;
+    }
+
+    fclose(file);
+    return 1;
+}
+
+char *read_string(FILE *fp) {
+    uint32_t len;
+    if (fread(&len, sizeof(uint32_t), 1, fp) != 1) return NULL;
+
+    char *str = malloc(len + 1);
+    if (!str) return NULL;
+
+    if (fread(str, sizeof(char), len, fp) != len) {
+        free(str);
+        return NULL;
+    }
+
+    str[len] = '\0';
+    return str;
+}
+
+user_t *read_user(FILE *fp) {
+    uint8_t null_flag;
+    if (fread(&null_flag, sizeof(uint8_t), 1, fp) != 1) return NULL;
+
+    if (null_flag == 1)
+        return NULL;
+
+    user_t *u = malloc(sizeof(user_t));
+    if (!u) return NULL;
+
+    if (fread(&u->uid, sizeof(uint32_t), 1, fp) != 1) {
+        free(u);
+        return NULL;
+    }
+
+    u->username = read_string(fp);
+    if (!u->username) {
+        free(u);
+        return NULL;
+    }
+
+    return u;
+}
+
+ticket_t *load_ticket_list(FILE *fp) {
+    ticket_t *head = NULL;
+    ticket_t *last = NULL;
+
+    while (1) {
+        ticket_t *t = malloc(sizeof(ticket_t));
+        if (!t) break;
+
+        if (fread(&t->tid, sizeof(uint32_t), 1, fp) != 1) {
+            free(t); break;  // fine file?
+        }
+
+        t->title = read_string(fp);
+        t->description = read_string(fp);
+        t->date = read_string(fp);
+
+        if (!t->title || !t->description || !t->date) {
+            free(t); break;
+        }
+
+        if (fread(&t->priority, sizeof(TicketPriority), 1, fp) != 1) { free(t); break; }
+        if (fread(&t->status, sizeof(TicketStatus), 1, fp) != 1) { free(t); break; }
+
+        t->support_agent = read_user(fp);
+
+        uint8_t has_next;
+        if (fread(&has_next, sizeof(uint8_t), 1, fp) != 1) { free(t); break; }
+
+        t->next = NULL;
+
+        if (!head) {
+            head = t;
+        } else {
+            last->next = t;
+        }
+        last = t;
+
+        if (!has_next) break;
+    }
+
+    return head;
+}
+
+int _load_tickets(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("fopen()");
+        return -1;
+    }
+
+    ticket_t *head = load_ticket_list(file);
+
+    fclose(file);
+    return 1;
 }
