@@ -1,5 +1,5 @@
-#include "protocol.h"
-#include "message.h"
+#include "../../include/protocol.h"
+#include "../../include/message.h"
 #include <unistd.h>
 #include <stdlib.h>
 

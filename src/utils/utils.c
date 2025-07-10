@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "utils.h"
+#include "../../include/utils.h"
 
 void serialize_string(FILE *fp, const char *str) {
     int len = strlen(str);

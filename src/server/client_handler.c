@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "authentication/session.h"
-#include "authentication/privileges.h"
-#include "protocol.h"
-#include "request.h"
-#include "server-dispatcher.h"
+#include "../../include/session.h"
+#include "../../include/privileges.h"
+#include "../../include/protocol.h"
+#include "../../include/request.h"
+#include "../../include/server-dispatcher.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

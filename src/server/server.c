@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "authentication/session.h"
+#include "../../include/session.h"
 
 #define MAX_CLIENTS 5
 #define CLIENT_HANDLER_NAME "client_handler"

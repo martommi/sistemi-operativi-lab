@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "privileges.h"
+#include "../../include/privileges.h"
 
 typedef struct user {
     uint32_t uid;

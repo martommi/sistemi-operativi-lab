@@ -1,7 +1,7 @@
 #include "ticket-internal.h"
-#include "../authentication/user-internal.h"
-#include "../utils.h"
-#include "ticket.h"
+#include "../auth/user-internal.h"
+#include "../../include/utils.h"
+#include "../../include/ticket.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>

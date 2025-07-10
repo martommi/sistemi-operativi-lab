@@ -1,16 +1,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "server-dispatcher.h"
-#include "authentication/privileges.h"
-#include "authentication/session.h"
-#include "authentication/user-internal.h"
-#include "authentication/user-lib.h"
-#include "message.h"
-#include "protocol.h"
-#include "request.h"
-#include "response.h"
-#include "ticket-system/ticket.h"
+#include "../../include/server-dispatcher.h"
+#include "../../include/privileges.h"
+#include "../../include/session.h"
+#include "../auth/user-internal.h"
+#include "../../include/user-lib.h"
+#include "../../include/message.h"
+#include "../../include/protocol.h"
+#include "../../include/request.h"
+#include "../../include/response.h"
+#include "../../include/ticket.h"
 
 typedef response_t *(*handler)(session_t *, message_t *);
 

@@ -10,10 +10,7 @@
 typedef enum ResponseCode {
     RESP_OK,
     RESP_ERROR,
-    RESP_AUTH_FAILED,
     RESP_INVALID_REQUEST,
-    RESP_TICKET_LIST,
-    RESP_ACK,
     // altri...
 } ResponseCode;
 

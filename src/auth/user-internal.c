@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "user-internal.h"
-#include "privileges.h"
-#include "../utils.h"
+#include "../../include/privileges.h"
+#include "../../include/utils.h"
 
 static user_t *head = NULL;
 static uint32_t uid = 0;

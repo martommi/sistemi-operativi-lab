@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ticket.h"
+#include "../../include/ticket.h"
 #include "ticket-internal.h"
 
 int open_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {

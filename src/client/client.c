@@ -5,10 +5,10 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "./authentication/session.h"
-#include "protocol.h"
-#include "request.h"
-#include "response.h"
+#include "../../include/session.h"
+#include "../../include/protocol.h"
+#include "../../include/request.h"
+#include "../../include/response.h"
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr;

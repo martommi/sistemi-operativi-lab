@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "message.h"
+#include "../../include/message.h"
 
 message_t *create_message(size_t size, char **content) {
     message_t *message;

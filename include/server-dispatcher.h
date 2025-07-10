@@ -1,7 +1,7 @@
 #ifndef SERVER_DISPATCHER_H
 #define SERVER_DISPATCHER_H
 
-#include "authentication/session.h"
+#include "session.h"
 #include "message.h"
 #include "request.h"
 #include "response.h"
