@@ -22,6 +22,6 @@ void end_session(session_t *session);
 user_t *login(session_t *session, char *username, char *passw);
 void logout(session_t *session);
 int is_logged_in(session_t *session);
-int sesion_has_privileges(session_t *session, Privileges privileges);
+int session_has_privileges(session_t *session, Privileges privileges);
 
 #endif /* SESSION_H */
