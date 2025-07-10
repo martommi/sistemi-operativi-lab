@@ -160,7 +160,7 @@ char *_print_ticket(const ticket_t *t) {
         return NULL;
     }
 
-    if (snprintf(NULL, 0, 
+    if (snprintf(str, len + 1, 
         "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
         t->tid,
         t->title,

@@ -10,6 +10,7 @@ int register_user(char *username, char* passw, Privileges privileges);    // wra
 int remove_user(uint32_t uid);
 int find_users(const char *username, int limit, user_t **found);
 user_t *authenticate(const char *username, const char* passw);
+char *user_to_string(const user_t *user);
 
 int has_privileges(const user_t *user, Privileges privileges);
 void grant_privileges(user_t *user, Privileges privileges);

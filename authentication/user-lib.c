@@ -36,6 +36,10 @@ user_t *authenticate(const char *username, const char *passw) {
     return _authenticate(username, passw);
 }
 
+char *user_to_string(const user_t *user) {
+    return _print_user(user);
+}
+
 int has_privileges(const user_t *user, Privileges privileges) {
     return (user->privileges & privileges) != 0;
 }

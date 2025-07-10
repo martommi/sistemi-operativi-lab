@@ -98,20 +98,28 @@ response_t *handle_remove_user(session_t *session, message_t *msg) {
         : create_response(RESP_ERROR, create_message_from_str("[USER] User removal failed (non-existing?)."));
 }
 
-response_t *handle_find_users(session_t *session, message_t *msg) { //TODO
+response_t *handle_find_users(session_t *session, message_t *msg) {
     if (!msg->content[0] || !msg->content[1]) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
     int limit = atoi(msg->content[1]);
-    user_t **users = malloc(sizeof(user_t) * limit);
-    if (!find_users(msg->content[0], limit, users)) {
+    user_t **users = malloc(sizeof(user_t *) * limit);
+    int count = find_users(msg->content[0], limit, users);
+    if (count <= 0) {
         free(users);
         return create_response(RESP_ERROR, create_message_from_str("[USER] Not found any users."));
     }
 
-    message_t *out;
-    // print found users to message(out) content
+    char **content = malloc(sizeof(char *) * count);
+    for (int i = 0; i < count; i++) {
+        content[i] = user_to_string(users[i]);
+    }
+
+    message_t *out = create_message(count, content);
+    for (int i = 0; i < count; i++) free(content[i]);
+    free(content);
+    free(users);
 
     return create_response(RESP_OK, out);
 }

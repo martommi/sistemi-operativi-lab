@@ -112,6 +112,44 @@ int _count_users() {
     return count;
 }
 
+const char *_privilege_to_string(Privileges p) {
+    switch (1 << (31 - __builtin_clz(p))) { // isola il bit (non zero) più significativo a sinistra, cioè il privilegio più alto
+        case PRIVILEGES_ADMIN: return "Admin";
+        case PRIVILEGES_SUPPORT_AGENT: return "Support Agent";
+        case PRIVILEGES_GUEST: return "Guest";
+        default: return "N/A";
+    }
+}
+
+char *_print_user(const user_t *u) {
+    size_t len = snprintf(NULL, 0, 
+        "ID: %d/n Username: %s/n Privileges: %s/n",
+        u->uid,
+        u->username,
+        _privilege_to_string(u->privileges)
+    );
+
+    char *str = calloc(1, len + 1);
+    if (str == NULL) {
+        perror("calloc()");
+        return NULL;
+    }
+
+    if (snprintf(str, len + 1, 
+        "ID: %d/n Username: %s/n Privileges: %s/n",
+        u->uid,
+        u->username,
+        _privilege_to_string(u->privileges)
+    ) > len + 1) {
+
+        fprintf(stderr, "%s() error: snprintf returned truncated result.", __func__);
+        free(str);
+        return NULL;
+    }
+
+    return str;
+}
+
 int _save_users(const char *filename) {
     //todo
 }

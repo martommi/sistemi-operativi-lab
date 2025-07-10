@@ -20,6 +20,8 @@ int _remove_user(uint32_t uid);
 int _find_users(const char *username, int limit, user_t **found);
 user_t *_authenticate(const char *username, const char *passw);
 int _count_users();
+const char *_privilege_to_string(Privileges p);
+char *_print_user(const user_t *user);
 
 int _save_users(const char *filename);
 int _load_users(const char *filename);
