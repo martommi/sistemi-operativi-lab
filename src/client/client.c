@@ -51,11 +51,12 @@ int main(int argc, char *argv[]) {
 
     printf("You are connected with the server.");
 
+    print_menu();
+    
     while (1) {
         request_t *req = NULL;
         response_t *resp = NULL;
 
-        print_menu();
         printf("> ");
         fflush(stdout);
 
