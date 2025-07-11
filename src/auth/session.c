@@ -50,6 +50,8 @@ user_t *login(session_t *session, char *username, char *passw) {
 
 void logout(session_t *session) {
     session->logged_in = 0;
+    session->privileges = PRIVILEGES_GUEST;
+    session->user = NULL;
 }
 
 int is_logged_in(session_t *session) {

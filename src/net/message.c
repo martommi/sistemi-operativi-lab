@@ -13,6 +13,8 @@ message_t *create_message(size_t size, char **content) {
         exit(EXIT_FAILURE);
     }
 
+    memset(message, 0, sizeof(message_t));
+
     message->size = size;
     message->content = content;
 
