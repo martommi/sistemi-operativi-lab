@@ -6,6 +6,7 @@
 */
 
 #include "message.h"
+#include <stdio.h>
 
 typedef enum ResponseCode {
     RESP_OK,
@@ -22,5 +23,6 @@ typedef struct response {
 
 response_t *create_response(ResponseCode code, message_t *msg);
 void free_response(response_t *response);
+int print_response(FILE *f, response_t *resp);
 
 #endif /* RESPONSE_H */

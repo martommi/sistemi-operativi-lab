@@ -9,6 +9,7 @@
 #include "../../include/protocol.h"
 #include "../../include/request.h"
 #include "../../include/response.h"
+#include "../../include/client-dispatcher.h"
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr;
@@ -50,14 +51,27 @@ int main(int argc, char *argv[]) {
 
     printf("You are connected with the server.");
 
-    request_t *req; //TODO alloca dentro al ciclo
-    response_t *resp;
-
     while (1) {
-        //ciclo di richieste TODO
+        request_t *req = NULL;
+        response_t *resp = NULL;
+
+        print_menu(stdout);
+        printf("> ");
+        fflush(stdout);
+
+        compose_request(stdin, &req);
         send_request(sock, req);
+        free_request(req);
+
         recv_response(sock, &resp);
-        // handle_response
+        print_response(stdout, resp);
+        
+        if (resp->code == RESP_EXIT) {
+            free_response(resp);
+            break;
+        }
+        
+        free_response(resp);
     }
     
     close(sock);
