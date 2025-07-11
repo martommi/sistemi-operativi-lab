@@ -12,6 +12,9 @@
 #include "../../include/response.h"
 #include "../../include/ticket.h"
 
+#define DEFAULT_USERS_PATH "../../data/users/"
+#define DEFAULT_TICKETS_PATH "../../data/tickets/"
+
 typedef response_t *(*handler)(session_t *, message_t *);
 
 static handler handlers[] = {
@@ -28,21 +31,21 @@ static handler handlers[] = {
     [REQ_ASSIGN_TICKET]             = handle_assign_ticket,
     [REQ_UPDATE_TICKET_STATUS]      = handle_update_ticket_status,
     [REQ_GET_ALL_TICKETS]           = handle_get_all_tickets,
-
     [REQ_TICKET_FILTER_PRIORITY]    = handle_filter_by_priority, 
     [REQ_TICKET_FILTER_STATUS]      = handle_filter_by_status,
     [REQ_TICKET_FILTER_SUPPORT_AGENT] = handle_filter_by_support_agent,
     [REQ_TICKET_FILTER_TITLE]       = handle_filter_by_title,
     [REQ_TICKET_FILTER_DATE]        = handle_filter_by_date,
-
     [REQ_SAVE_TICKETS]              = handle_save_tickets,
-    [REQ_LOAD_TICKETS]              = handle_load_tickets
+    [REQ_LOAD_TICKETS]              = handle_load_tickets,
+
+    [REQ_QUIT]                      = handle_quit
 };
 
-void handle_request(session_t *session, request_t *req) {
-    response_t *resp = NULL;
+static size_t map_size = sizeof(handlers) / sizeof(handlers[0]);
 
-    size_t map_size = sizeof(handlers) / sizeof(handlers[0]);
+int handle_request(session_t *session, request_t *req) {
+    response_t *resp = NULL;
 
     if ((size_t)req->code >= map_size || handlers[req->code] == NULL) {
         resp = handle_invalid_request();
@@ -51,7 +54,10 @@ void handle_request(session_t *session, request_t *req) {
     }
 
     send_response(session->fd, resp);
+
+    int keep_session_alive = (resp->code == RESP_EXIT);
     free_response(resp);
+    return keep_session_alive;
 }
 
 response_t *handle_invalid_request() {
@@ -407,4 +413,15 @@ response_t *handle_load_tickets(session_t *session, message_t *msg) {
     return load_tickets(msg->content[0]) 
         ? create_response(RESP_OK, create_message_from_str("[TICKET] tickets saved on file."))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] failed to save tickets."));
+}
+
+response_t *handle_quit(session_t *session, message_t *msg) {
+    //generate day code
+    char *name = "";
+    save_users(strcat(DEFAULT_USERS_PATH, name));
+    save_tickets(strcat(DEFAULT_TICKETS_PATH, name));
+
+    free_message(msg);
+
+    return create_response(RESP_EXIT, create_message_from_str("[SERVER] Users and tickets saved. You will now be disconnected."));
 }

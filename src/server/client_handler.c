@@ -22,9 +22,17 @@ int main(int argc, char* argv[]) {
 
     session_t *session = create_session(client_sock, NULL, 0, PRIVILEGES_GUEST);
 
-    request_t *req;
-    recv_request(client_sock, &req);
-    handle_request(session, req);
+    while (1) {
+        request_t *req = NULL;
+        recv_request(client_sock, &req);
 
+        if (!handle_request(session, req)) {    /* if it receives an exit code, ends session */
+            free_request(req);
+            break;
+        }
+
+        free_request(req);
+    }
+    
     end_session(session);
 }

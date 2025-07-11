@@ -6,7 +6,7 @@
 #include "request.h"
 #include "response.h"
 
-void handle_request(session_t *session, request_t *req);
+int handle_request(session_t *session, request_t *req);
 response_t *handle_invalid_request();
 response_t *handle_login(session_t *session, message_t *msg);
 response_t *handle_logout(session_t *session, message_t *msg);
@@ -29,5 +29,7 @@ response_t *handle_filter_by_title(session_t *session, message_t *msg);
 response_t *handle_filter_by_date(session_t *session, message_t *msg);
 response_t *handle_save_tickets(session_t *session, message_t *msg);
 response_t *handle_load_tickets(session_t *session, message_t *msg);
+
+response_t *handle_quit(session_t *session, message_t *msg);
 
 #endif /* SERVER_DISPATCHER_H */

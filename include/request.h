@@ -28,8 +28,9 @@ typedef enum RequestCode {
     REQ_TICKET_FILTER_TITLE,
     REQ_TICKET_FILTER_DATE,
     REQ_SAVE_TICKETS,
-    REQ_LOAD_TICKETS
-    // altri...
+    REQ_LOAD_TICKETS,
+    /* Other */
+    REQ_QUIT
 } RequestCode;
 
 typedef struct request {
