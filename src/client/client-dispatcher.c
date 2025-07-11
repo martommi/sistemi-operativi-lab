@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef message_t *(*input_handler)(FILE *f);
 
@@ -33,18 +34,30 @@ input_handler input_handlers[] = {
     [REQ_QUIT]                      = input_quit
 };
 
-static size_t map_size = sizeof(input_handlers) / sizeof(input_handlers[0]);
+static size_t map_size = sizeof(input_handlers) / sizeof(input_handler);
 
 void print_menu() {
-    char *menu = "\
-    \
-    \
-    \
-    \
-    \
-    \
-    \
-    \
+    char *menu = "Choose an option:\
+    1- Login \n\
+    2- Logout \n\
+    3- Register user \n\
+    4- Remove user \n\
+    5- Find user \n\
+    6- Save users on file \n\
+    7- Load users from file \n\
+    8- Open ticket \n\
+    9- Delete ticket \n\
+    10- Assign ticket \n\
+    11- Update ticket status \n\
+    12- Print all tickets \n\
+    13- Filter tickets by priority \n\
+    14- Filter tickets by status \n\
+    15- Filter tickets by support agent \n\
+    16- Filter tickets by title \n\
+    17- Filter tickets by date \n\
+    18- Save tickets on file \n\
+    19- Load tickets from file \n\
+    20- Disconnect \n\
     ";
 
     printf("%s", menu);
@@ -76,11 +89,38 @@ int compose_request(FILE *fp, request_t **req_ptr) {
 }
 
 message_t *input_login(FILE *fp) {
-    // TODO
+    char username[256];
+    char password[256];
+    char **content = malloc(2 * sizeof(char*));
+
+    printf("> username: ");
+    fflush(stdout);
+
+    if (!fgets(username, sizeof(username), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    username[strcspn(username, "\n")] = '\0';
+
+    printf("> password: ");
+    fflush(stdout);
+
+    if (!fgets(password, sizeof(password), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    password[strcspn(password, "\n")] = '\0';
+
+    content[0] = username;
+    content[1] = password;
+
+    return create_message(2, content);
 }
 
 message_t *input_logout(FILE *fp) {
-    // TODO
+    return NULL;    /* No input required */
 }
 
 message_t *input_register_user(FILE *fp) {
@@ -152,5 +192,5 @@ message_t *input_load_tickets(FILE *fp) {
 }
 
 message_t *input_quit(FILE *fp) {
-    // TODO
+    return NULL;
 }

@@ -26,8 +26,10 @@ message_t *create_message_from_str(const char *str) {
 }
 
 void free_message(message_t *message) {
+    if (!message) return;
+    
     for (int i = 0; i < message->size; i++) {
-        if (message->content[i] == NULL) break;
+        if (message->content[i] == NULL) continue;
 
         free(message->content[i]);
         message->content[i] = NULL;
