@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
         request_t *req = NULL;
         response_t *resp = NULL;
 
-        print_menu(stdout);
+        print_menu();
         printf("> ");
         fflush(stdout);
 

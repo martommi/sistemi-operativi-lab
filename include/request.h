@@ -9,7 +9,7 @@
 
 typedef enum RequestCode {
     /* Authentication and user management */
-    REQ_LOGIN,
+    REQ_LOGIN = 1,
     REQ_LOGOUT,
     REQ_REGISTER_USER,
     REQ_REMOVE_USER,

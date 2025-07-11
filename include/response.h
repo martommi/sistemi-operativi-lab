@@ -9,11 +9,10 @@
 #include <stdio.h>
 
 typedef enum ResponseCode {
-    RESP_OK,
-    RESP_ERROR,
+    RESP_ERROR = -1,
     RESP_INVALID_REQUEST,
+    RESP_OK,
     RESP_EXIT
-    // altri...
 } ResponseCode;
 
 typedef struct response {
