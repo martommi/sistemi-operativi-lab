@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "user-lib.h"
+#include "../../include/user-lib.h"
 #include "user-internal.h"
 
 int register_user(char *username, char *passw, Privileges privileges) {

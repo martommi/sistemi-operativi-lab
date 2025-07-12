@@ -14,7 +14,7 @@ request_t *create_request(RequestCode code, message_t *msg) {
     return req;
 }
 
-void free_request(request_t *response) {
-    free_message(response->payload);
-    free(response);
+void free_request(request_t *req) {
+    free_message(req->payload);
+    free(req);
 }

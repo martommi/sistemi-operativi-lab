@@ -53,7 +53,7 @@ void write_message(int fd, message_t *message) {
 
 void read_message(int fd, message_t **msg_out) { //TODO memory leak
     message_t *msg;
-    if ((msg = (message_t *)malloc(sizeof(message_t)))) {
+    if (!(msg = (message_t *)malloc(sizeof(message_t)))) {
         perror("malloc()");
         exit(EXIT_FAILURE);
     }
