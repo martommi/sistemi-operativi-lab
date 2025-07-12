@@ -92,33 +92,10 @@ int compose_request(FILE *fp, request_t **req_ptr) {
 }
 
 message_t *input_login(FILE *fp) {
-    char username[256];
-    char password[256];
-    char **content = malloc(2 * sizeof(char*));
-
-    printf("> username: ");
-    fflush(stdout);
-
-    if (!fgets(username, sizeof(username), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    username[strcspn(username, "\n")] = '\0';
-
-    printf("> password: ");
-    fflush(stdout);
-
-    if (!fgets(password, sizeof(password), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    password[strcspn(password, "\n")] = '\0';
-
-    content[0] = username;
-    content[1] = password;
-
+    char *username = prompt_string(fp, "> username: ");
+    char *password = prompt_string(fp, "> password: ");
+    if (!username || !password) return NULL;
+    char *content[] = { username, password };
     return create_message(2, content);
 }
 
@@ -127,315 +104,70 @@ message_t *input_logout(FILE *fp) {
 }
 
 message_t *input_register_user(FILE *fp) {
-    char username[256];
-    char password[256];
-    char **content = malloc(2 * sizeof(char*));
-
-    printf("> choose a username: ");
-    fflush(stdout);
-
-    if (!fgets(username, sizeof(username), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    username[strcspn(username, "\n")] = '\0';
-
-    printf("> choose a password: ");
-    fflush(stdout);
-
-    if (!fgets(password, sizeof(password), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    password[strcspn(password, "\n")] = '\0';
-
-    content[0] = username;
-    content[1] = password;
-
-    return create_message(2, content);
+    return input_login(fp);   //TODO non mi piace che si chiamano
 }
 
 message_t *input_remove_user(FILE *fp) {
-    char uid[16];
-    char **content = malloc(sizeof(char *));
-    if (!content) return NULL;
-
-    int condition = 0;
-    do {
-        printf("> uid of user to delete: ");
-        fflush(stdout);
-
-        if (!fgets(uid, sizeof(uid), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        uid[strcspn(uid, "\n")] = '\0';
-
-        condition = is_number(uid);
-        if (!condition) {
-            fprintf(stderr, "[REMOVE] Invalid UID. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(uid);
-    if (!content[0]) {
-        free(content);
-        return NULL;
-    }
-
+    char *uid = prompt_validated_input(fp, "> uid of user to delete: ", is_number, "[REMOVE] Invalid UID. Must be a number.");
+    if (!uid) return NULL;
+    char *content[] = { uid };
     return create_message(1, content);
 }
 
 message_t *input_find_user(FILE *fp) {
-    char username[256];
-    char **content = malloc(2 * sizeof(char *));
-
-    printf("> find username: ");
-    fflush(stdout);
-
-    if (!fgets(username, sizeof(username), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    content[0] = username;
+    char *username = prompt_string(fp, "> find username: ");
+    if (!username) return NULL;
+    char *content[] = { username };
     return create_message(1, content);
 }
 
 message_t *input_save_users(FILE *fp) {
-    char path[256];
-    char **content = malloc(sizeof(char *));
-    
-    int condition = 0;
-    do {
-        printf("> file path: ");
-        fflush(stdout);
-
-        if (!fgets(path, sizeof(path), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        path[strcspn(path, "\n")] = '\0';
-
-        condition = is_valid_path(path, F_OK | W_OK);
-        if (!condition) {
-            printf("[SAVE] Invalid path. Please provide an existing path with write permission.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(path);
+    char *path = prompt_validated_input(fp, "> file path: ", can_write_file, "[SAVE] Invalid path.");
+    if (!path) return NULL;
+    char *content[] = { path };
     return create_message(1, content);
 }
 
 message_t *input_load_users(FILE *fp) {
-    char path[256];
-    char **content = malloc(sizeof(char *));
-    
-    int condition = 0;
-    do {
-        printf("> file path: ");
-        fflush(stdout);
-
-        if (!fgets(path, sizeof(path), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        path[strcspn(path, "\n")] = '\0';
-
-        condition = is_valid_path(path, F_OK | R_OK);
-        if (!condition) {
-            printf("[LOAD] Invalid path. Please provide an existing path with read permission.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(path);
+    char *path = prompt_validated_input(fp, "> file path: ", can_read_file, "[LOAD] Invalid path.");
+    if (!path) return NULL;
+    char *content[] = { path };
     return create_message(1, content);
 }
 
 message_t *input_open_ticket(FILE *fp) {
-    char title[256];
-    char description[256];
-    char date[11];
-    char **content = malloc(3 * sizeof(char *));
-
-    printf("> title: ");
-    fflush(stdout);
-
-    if (!fgets(title, sizeof(title), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    title[strcspn(title, "\n")] = '\0';
-    content[0] = strdup(title);
-
-    printf("> description: ");
-    fflush(stdout);
-
-    if (!fgets(description, sizeof(description), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    description[strcspn(description, "\n")] = '\0';
-    content[1] = strdup(description);
-
-    int condition = 0;
-    do {
-        printf("> date (default = today): ");
-        fflush(stdout);
-
-        if (!fgets(date, sizeof(date), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        date[strcspn(date, "\n")] = '\0';
-        if (strlen(date) == 0) {
-            strncpy(date, get_today(), sizeof(date));
-            date[sizeof(date) - 1] = '\0';
-        }
-
-        condition = is_valid_date_format(date);
-        if (!condition) {
-            printf("[TICKET] Bad date format. Must be YYYY-MM-DD.");
-        }
-
-    } while (!condition);
-
-    content[2] = strdup(date);
-    return create_message(3, content);
+    char *title = prompt_string(fp, "> ticket title: ");
+    char *description = prompt_string(fp, "> ticket description: ");
+    if (!title || !description) return NULL;
+    char *content[] = { title, description };
+    return create_message(2, content);
 }
 
 message_t *input_delete_ticket(FILE *fp) {
-    char tid[16];
-    char **content = malloc(sizeof(char *));
-    if (!content) return NULL;
-
-    int condition = 0;
-    do {
-        printf("> ticket id of ticket to delete: ");
-        fflush(stdout);
-
-        if (!fgets(tid, sizeof(tid), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        tid[strcspn(tid, "\n")] = '\0';
-
-        condition = is_number(tid);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid TID. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(tid);
-    if (!content[0]) {
-        free(content);
-        return NULL;
-    }
-
+    char *tid = prompt_validated_input(fp, "> ticket ID: ", is_number, "[DELETE] Invalid ticket ID.");
+    if (!tid) return NULL;
+    char *content[] = { tid };
     return create_message(1, content);
 }
 
 message_t *input_assign_ticket(FILE *fp) {
-    char tid[16];
-    char username[256];
-    char **content = malloc(2 * sizeof(char *));
-
-    int condition = 0;
-    do {
-        printf("> ticket id: ");
-        fflush(stdout);
-
-        if (!fgets(tid, sizeof(tid), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        tid[strcspn(tid, "\n")] = '\0';
-
-        condition = is_number(tid);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid TID. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(tid);
-
-    printf("> support agent username: ");
-    fflush(stdout);
-
-    if (!fgets(username, sizeof(username), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    content[1] = strdup(username);
+    char *tid = prompt_validated_input(fp, "> ticket ID: ", is_number, "[ASSIGN] Invalid ticket ID.");
+    char *agent = prompt_string(fp, "> assign to (agent username): ");
+    if (!tid || !agent) return NULL;
+    char *content[] = { tid, agent };
     return create_message(2, content);
 }
 
 message_t *input_update_ticket_status(FILE *fp) {
-    char tid[16];
-    char status[16];
-    char **content = malloc(2 * sizeof(char *));
-
-    int condition = 0;
-    do {
-        printf("> ticket id: ");
-        fflush(stdout);
-
-        if (!fgets(tid, sizeof(tid), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        tid[strcspn(tid, "\n")] = '\0';
-
-        condition = is_number(tid);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid TID. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(tid);
-
-    condition = 0;
-    do {
-        printf("Select new status: \n\
-            1- Open\n\
-            2- Ongoing\n\
-            3- Closed\n");
-        printf("> ");
-        fflush(stdout);
-
-        if (!fgets(status, sizeof(status), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        status[strcspn(status, "\n")] = '\0';
-
-        condition = is_number(status);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid Status. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[1] = strdup(status);
+    char *tid = prompt_validated_input(fp, "> ticket ID: ", is_number, "[UPDATE] Invalid ticket ID.");
+    printf("Select new status: \n\
+        1- Open\n\
+        2- Ongoing\n\
+        3- Closed\n\
+        ");
+    char *status = prompt_validated_input(fp, "> new status: ", is_number, "[TICKET] Invalid input. Must be a number.");
+    if (!tid || !status) return NULL;
+    char *content[] = { tid, status };
     return create_message(2, content);
 }
 
@@ -444,239 +176,81 @@ message_t *input_get_all_tickets(FILE *fp) {
 }
 
 message_t *input_ticket_filter_priority(FILE *fp) {
-    char priority[16];
-    char **content = malloc(sizeof(char *));
-
-    int condition = 0;
-    do {
-        printf("Filter by priority: \n\
-            1- Low\n\
-            2- Standard\n\
-            3- High\n");
-        printf("> ");
-        fflush(stdout);
-
-        if (!fgets(priority, sizeof(priority), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        priority[strcspn(priority, "\n")] = '\0';
-
-        condition = is_number(priority);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid Status. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(priority);
-    return create_message(1, content);
-}
-
-message_t *input_ticket_filter_status(FILE *fp) {
-    char status[16];
-    char **content = malloc(sizeof(char *));
-
-    int condition = 0;
-    do {
-        printf("Filter by status: \n\
-            1- Open\n\
-            2- Ongoing\n\
-            3- Closed\n");
-        printf("> ");
-        fflush(stdout);
-
-        if (!fgets(status, sizeof(status), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        status[strcspn(status, "\n")] = '\0';
-
-        condition = is_number(status);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid Status. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(status);
-    return create_message(1, content);
+    char *tid = prompt_validated_input(fp, "> ticket ID: ", is_number, "[UPDATE] Invalid ticket ID.");
+    printf("Filter by priority: \n\
+        1- Low\n\
+        2- Standard\n\
+        3- High\n\
+        ");
+    char *status = prompt_validated_input(fp, "> new status: ", is_number, "[TICKET] Invalid input. Must be a number.");
+    if (!tid || !status) return NULL;
+    char *content[] = { tid, status };
+    return create_message(2, content);
 }
 
 message_t *input_ticket_filter_support_agent(FILE *fp) {
-    char username[256];
-    char **content = malloc(sizeof(char *));
-
-    printf("> username of agent: ");
-    fflush(stdout);
-
-    if (!fgets(username, sizeof(username), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    username[strcspn(username, "\n")] = '\0';
-    content[0] = strdup(username);
+    char *agent = prompt_string(fp, "> support agent (username): ");
+    if (!agent) return NULL;
+    char *content[] = { agent };
     return create_message(1, content);
 }
 
 message_t *input_ticket_filter_title(FILE *fp) {
-    char title[256];
-    char mode[16];
-    char **content = malloc(2 * sizeof(char *));
-
-    printf("> filter title: ");
-    fflush(stdout);
-
-    if (!fgets(title, sizeof(title), fp)) {
-        free(content);
-        return NULL;
-    }
-
-    title[strcspn(title, "\n")] = '\0';
-    content[0] = strdup(title);
-
-    int condition = 0;
-    do {
-        printf("Tile matching mode: \n\
-            1- Exact Match\n\
-            2- Contains\n\
-            3- Starts With\n");
-        printf("> ");
-        fflush(stdout);
-
-        if (!fgets(mode, sizeof(mode), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        mode[strcspn(mode, "\n")] = '\0';
-
-        condition = is_number(mode);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid input. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[1] = strdup(mode);
+    char *title = prompt_string(fp, "> ticket title: ");
+    printf("Tile matching mode: \n\
+        1- Exact Match\n\
+        2- Contains\n\
+        3- Starts With\n\
+        ");
+    char *mode = prompt_validated_input(fp, "> mode: ", is_number, "[TICKET] Invalid input. Must be a number.");
+    if (!title || !mode) return NULL;
+    char *content[] = { title, mode};
     return create_message(2, content);
 }
 
 message_t *input_ticket_filter_date(FILE *fp) {
-    char mode[16];
-    char dates[2][11];
-    char **content;
+    printf("Date matching mode:\n"
+           "  1 - Exact Match\n"
+           "  2 - Before\n"
+           "  3 - After\n"
+           "  4 - Range\n");
 
-    int condition = 0;
-    do {
-        printf("Date matching mode: \n\
-            1- Exact Match\n\
-            2- Before\n\
-            3- After\n\
-            4- Range\n");
-        printf("> ");
-        fflush(stdout);
+    char *mode = prompt_validated_input(fp, "> mode: ", is_number, "[TICKET] Invalid input. Must be a number.");
+    if (!mode) return NULL;
 
-        if (!fgets(mode, sizeof(mode), fp)) {
-            free(content);
+    char *date_1 = prompt_validated_input(fp, "> date (YYYY-MM-DD): ", is_valid_date_format, "[TICKET] Bad date format. Must be YYYY-MM-DD.");
+    if (!date_1) {
+        free(mode);
+        return NULL;
+    }
+
+    if (atoi(mode) == 4) {
+        char *date_2 = prompt_validated_input(fp, "> second date (YYYY-MM-DD): ", is_valid_date_format, "[TICKET] Bad date format. Must be YYYY-MM-DD.");
+        if (!date_2) {
+            free(mode);
+            free(date_1);
             return NULL;
         }
 
-        mode[strcspn(mode, "\n")] = '\0';
-
-        condition = is_number(mode);
-        if (!condition) {
-            fprintf(stderr, "[TICKET] Invalid input. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    int choice = atoi(mode);
-    size_t size = (choice == 4 /* Range */) ? 3 : 2;
-
-    content = malloc(size * sizeof(char *));
-    content[0] = mode;
-
-    int dates_to_ask = (choice == 4) ? 2 : 1;
-    for (int i = 0; i < dates_to_ask; i++) {
-        do {
-            printf("> %s: ", (choice == 4 && i == 1) ? "second date" : "date");
-            fflush(stdout);
-
-            if (!fgets(dates[i], 11, fp)) {
-                for (int j = 1; j < i + 1; j++) free(content[j]);
-                free(content[0]);
-                free(content);
-                return NULL;
-            }
-
-            dates[i][strcspn(dates[i], "\n")] = '\0';
-
-            if (!(condition = is_valid_date_format(dates[i]))) {
-                printf("[TICKET] Bad date format. Must be YYYY-MM-DD.\n");
-            }
-        } while (!condition);
-
-        content[i + 1] = strdup(dates[i]);
+        char *content[] = {mode, date_1, date_2};
+        return create_message(3, content);
     }
 
-    return create_message(size, content);
+    char *content[] = {mode, date_1};
+    return create_message(2, content);
 }
 
 message_t *input_save_tickets(FILE *fp) {
-    char path[256];
-    char **content = malloc(sizeof(char *));
-    
-    int condition = 0;
-    do {
-        printf("> file path: ");
-        fflush(stdout);
-
-        if (!fgets(path, sizeof(path), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        path[strcspn(path, "\n")] = '\0';
-
-        condition = is_valid_path(path, F_OK | W_OK);
-        if (!condition) {
-            printf("[SAVE] Invalid path. Please provide an existing path with write permission.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(path);
+    char *path = prompt_validated_input(fp, "> file path: ", can_write_file, "[LOAD] Invalid path.");
+    if (!path) return NULL;
+    char *content[] = { path };
     return create_message(1, content);
 }
 
 message_t *input_load_tickets(FILE *fp) {
-    char path[256];
-    char **content = malloc(sizeof(char *));
-    
-    int condition = 0;
-    do {
-        printf("> file path: ");
-        fflush(stdout);
-
-        if (!fgets(path, sizeof(path), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        path[strcspn(path, "\n")] = '\0';
-
-        condition = is_valid_path(path, F_OK | R_OK);
-        if (!condition) {
-            printf("[LOAD] Invalid path. Please provide an existing path with read permission.\n");
-        }
-
-    } while (!condition);
-
-    content[0] = strdup(path);
+    char *path = prompt_validated_input(fp, "> file path: ", can_read_file, "[LOAD] Invalid path.");
+    if (!path) return NULL;
+    char *content[] = { path };
     return create_message(1, content);
 }
 
