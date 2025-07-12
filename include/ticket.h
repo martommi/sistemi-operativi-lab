@@ -10,32 +10,32 @@ typedef struct user user_t;
 typedef struct ticket ticket_t;
 
 typedef enum TicketStatus {
-    TICKET_STATUS_OPEN,
+    TICKET_STATUS_OPEN = 1,
     TICKET_STATUS_ONGOING,
     TICKET_STATUS_CLOSED
 } TicketStatus;
 
 typedef enum TicketPriority {
-    TICKET_PRIORITY_LOW,
+    TICKET_PRIORITY_LOW = 1,
     TICKET_PRIORITY_STANDARD,
     TICKET_PRIORITY_HIGH
 } TicketPriority;
 
 typedef enum TitleMatchMode {
-    TITLE_MATCH_EXACT,
+    TITLE_MATCH_EXACT = 1,
     TITLE_MATCH_CONTAINS,
     TITLE_MATCH_STARTS_WITH
 } TitleMatchMode;
 
 typedef enum DateMatchMode {
-    DATE_MATCH_EXACT,
+    DATE_MATCH_EXACT = 1,
     DATE_MATCH_BEFORE,
     DATE_MATCH_AFTER,
     DATE_MATCH_RANGE
 } DateMatchMode;
 
 int open_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, /* Nullable */ user_t *support_agent);
-int delete_ticket(ticket_t *ticket);
+int delete_ticket(uint32_t tid);
 int count_tickets();
 int assign_ticket(ticket_t *ticket, user_t *support_agent);
 int update_status(ticket_t *ticket, TicketStatus new_status);

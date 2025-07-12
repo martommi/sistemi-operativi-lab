@@ -16,13 +16,8 @@ int open_ticket(char *title, char *desc, char *date, TicketPriority priority, Ti
     return 0;
 }
 
-int delete_ticket(ticket_t *ticket) {
-    if (!ticket) {
-        fprintf(stderr, "%s(): NULL pointer.", __func__);
-        return -1;
-    }
-
-    return _remove_ticket(ticket);
+int delete_ticket(uint32_t tid) {
+    return _remove_ticket(tid);
 }
 
 int count_tickets() {

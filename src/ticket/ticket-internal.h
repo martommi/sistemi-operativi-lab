@@ -27,7 +27,7 @@ int get_by_date(const ticket_t *target, va_list args);
 int get_by_tid(const ticket_t *target, va_list args);
 
 int _add_ticket(ticket_t *ticket);
-int _remove_ticket(ticket_t *ticket);
+int _remove_ticket(uint32_t tid);
 int _count_tickets();
 int _set_support_agent(ticket_t *ticket, user_t *support_agent);
 int _set_status(ticket_t *ticket, TicketStatus new_status);

@@ -161,7 +161,7 @@ int _add_ticket(ticket_t *ticket) {
     return 1;
 }
 
-int _remove_ticket(ticket_t *ticket) {
+int _remove_ticket(uint32_t tid) {
     ticket_t *curr = head;
     ticket_t *prev = NULL;
 

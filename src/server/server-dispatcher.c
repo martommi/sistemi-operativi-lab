@@ -159,12 +159,12 @@ response_t *handle_load_users(session_t *session, message_t *msg) {
 }
 
 response_t *handle_open_ticket(session_t *session, message_t *msg) {
-    if (msg->size < 4) {
+    if (msg->size < 3) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));    
     }
 
     return open_ticket(msg->content[0], msg->content[1], msg->content[2], 
-        atoi(msg->content[3]), TICKET_STATUS_OPEN, NULL)
+        TICKET_PRIORITY_STANDARD, TICKET_STATUS_OPEN, NULL)
 
         ? create_response(RESP_OK, create_message_from_str("[TICKET] Ticket opened."))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] Ticket creation failed."));
@@ -179,9 +179,9 @@ response_t *handle_delete_ticket(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    return delete_ticket(NULL) 
-        ? create_response(RESP_OK, NULL)
-        : create_response(RESP_ERROR, NULL);
+    return delete_ticket(atoi(msg->content[0])) 
+        ? create_response(RESP_OK, create_message_from_str("[TICKET] Ticket removed."))
+        : create_response(RESP_ERROR, create_message_from_str("[TICKET] Error removing ticket (non-existing?)."));
 }
 
 response_t *handle_assign_ticket(session_t *session, message_t *msg) { 
