@@ -1,8 +1,11 @@
 #include "../../include/client-dispatcher.h"
+#include <ctype.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef message_t *(*input_handler)(FILE *f);
 
@@ -35,6 +38,20 @@ input_handler input_handlers[] = {
 };
 
 static size_t map_size = sizeof(input_handlers) / sizeof(input_handler);
+
+
+int is_number(const char *str) {
+    if (*str == '\0') return 0;
+    while (*str) {
+        if (!isdigit(*str)) return 0;
+        str++;
+    }
+    return 1;
+}
+
+int is_valid_path(const char *path, int flags) {
+    return access(path, flags) == 0;    /* Checks if path exists and has permissions */
+}
 
 void print_menu() {
     char *menu = "Choose an option:\
@@ -124,23 +141,155 @@ message_t *input_logout(FILE *fp) {
 }
 
 message_t *input_register_user(FILE *fp) {
-    // TODO
+    char username[256];
+    char password[256];
+    char **content = malloc(2 * sizeof(char*));
+
+    printf("> choose a username: ");
+    fflush(stdout);
+
+    if (!fgets(username, sizeof(username), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    username[strcspn(username, "\n")] = '\0';
+
+    printf("> choose a password: ");
+    fflush(stdout);
+
+    if (!fgets(password, sizeof(password), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    password[strcspn(password, "\n")] = '\0';
+
+    content[0] = username;
+    content[1] = password;
+
+    return create_message(2, content);
 }
 
 message_t *input_remove_user(FILE *fp) {
-    // TODO
+    char uid[16];
+    char **content = malloc(sizeof(char *));
+    if (!content) return NULL;
+
+    do {
+        printf("> uid of user to delete: ");
+        fflush(stdout);
+
+        if (!fgets(uid, sizeof(uid), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        uid[strcspn(uid, "\n")] = '\0';
+
+        if (!is_number(uid)) {
+            fprintf(stderr, "[REMOVE] Invalid UID. Must be a number.\n");
+        }
+
+    } while (!is_number(uid));
+
+    content[0] = strdup(uid);
+    if (!content[0]) {
+        free(content);
+        return NULL;
+    }
+
+    return create_message(1, content);
 }
 
 message_t *input_find_user(FILE *fp) {
-    // TODO
+    char username[256];
+    char limit[16];
+    char **content = malloc(2 * sizeof(char *));
+
+    printf("> find username: ");
+    fflush(stdout);
+
+    if (!fgets(username, sizeof(username), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    content[0] = username;
+
+    do {
+        printf("> limit (default = 1): ");
+        fflush(stdout);
+
+        if (!fgets(limit, sizeof(limit), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        limit[strcspn(limit, "\n")] = '\0';
+
+        if (!is_number(limit)) {
+            printf("[FIND] Invalid input. Must be a number.\n");
+        }
+
+    } while (!is_number(limit));
+
+    content[1] = strdup(limit);
+    return create_message(2, content);
 }
 
 message_t *input_save_users(FILE *fp) {
-    // TODO
+    char path[256];
+    char **content = malloc(sizeof(char *));
+    
+    int condition = 0;
+    do {
+        printf("> file path: ");
+        fflush(stdout);
+
+        if (!fgets(path, sizeof(path), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        path[strcspn(path, "\n")] = '\0';
+
+        condition = is_valid_path(path, F_OK | W_OK);
+        if (!condition) {
+            printf("[SAVE] Invalid path. Please provide an existing path with write permission.\n");
+        }
+
+    } while (!condition);
+
+    content[0] = strdup(path);
+    return create_message(1, content);
 }
 
 message_t *input_load_users(FILE *fp) {
-    // TODO
+    char path[256];
+    char **content = malloc(sizeof(char *));
+    
+    int condition = 0;
+    do {
+        printf("> file path: ");
+        fflush(stdout);
+
+        if (!fgets(path, sizeof(path), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        path[strcspn(path, "\n")] = '\0';
+
+        condition = is_valid_path(path, F_OK | R_OK);
+        if (!condition) {
+            printf("[LOAD] Invalid path. Please provide an existing path with read permission.\n");
+        }
+
+    } while (!condition);
+
+    content[0] = strdup(path);
+    return create_message(1, content);
 }
 
 message_t *input_open_ticket(FILE *fp) {
@@ -184,11 +333,57 @@ message_t *input_ticket_filter_date(FILE *fp) {
 }
 
 message_t *input_save_tickets(FILE *fp) {
-    // TODO
+    char path[256];
+    char **content = malloc(sizeof(char *));
+    
+    int condition = 0;
+    do {
+        printf("> file path: ");
+        fflush(stdout);
+
+        if (!fgets(path, sizeof(path), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        path[strcspn(path, "\n")] = '\0';
+
+        condition = is_valid_path(path, F_OK | W_OK);
+        if (!condition) {
+            printf("[SAVE] Invalid path. Please provide an existing path with write permission.\n");
+        }
+
+    } while (!condition);
+
+    content[0] = strdup(path);
+    return create_message(1, content);
 }
 
 message_t *input_load_tickets(FILE *fp) {
-    // TODO
+    char path[256];
+    char **content = malloc(sizeof(char *));
+    
+    int condition = 0;
+    do {
+        printf("> file path: ");
+        fflush(stdout);
+
+        if (!fgets(path, sizeof(path), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        path[strcspn(path, "\n")] = '\0';
+
+        condition = is_valid_path(path, F_OK | R_OK);
+        if (!condition) {
+            printf("[LOAD] Invalid path. Please provide an existing path with read permission.\n");
+        }
+
+    } while (!condition);
+
+    content[0] = strdup(path);
+    return create_message(1, content);
 }
 
 message_t *input_quit(FILE *fp) {
