@@ -1,6 +1,5 @@
 #include "../../include/client-dispatcher.h"
 #include "../../include/utils.h"
-#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -193,7 +192,6 @@ message_t *input_remove_user(FILE *fp) {
 
 message_t *input_find_user(FILE *fp) {
     char username[256];
-    char limit[16];
     char **content = malloc(2 * sizeof(char *));
 
     printf("> find username: ");
@@ -205,28 +203,7 @@ message_t *input_find_user(FILE *fp) {
     }
 
     content[0] = username;
-
-    int condition = 0;
-    do {
-        printf("> limit (default = 1): ");
-        fflush(stdout);
-
-        if (!fgets(limit, sizeof(limit), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        limit[strcspn(limit, "\n")] = '\0';
-
-        condition = is_number(limit);
-        if (!condition) {
-            printf("[FIND] Invalid input. Must be a number.\n");
-        }
-
-    } while (!condition);
-
-    content[1] = strdup(limit);
-    return create_message(2, content);
+    return create_message(1, content);
 }
 
 message_t *input_save_users(FILE *fp) {
@@ -468,8 +445,7 @@ message_t *input_get_all_tickets(FILE *fp) {
 
 message_t *input_ticket_filter_priority(FILE *fp) {
     char priority[16];
-    char limit[16];
-    char **content = malloc(2 * sizeof(char *));
+    char **content = malloc(sizeof(char *));
 
     int condition = 0;
     do {
@@ -495,34 +471,12 @@ message_t *input_ticket_filter_priority(FILE *fp) {
     } while (!condition);
 
     content[0] = strdup(priority);
-
-    condition = 0;
-    do {
-        printf("> limit (default = 1): ");
-        fflush(stdout);
-
-        if (!fgets(limit, sizeof(limit), fp)) {
-            free(content);
-            return NULL;
-        }
-
-        limit[strcspn(limit, "\n")] = '\0';
-
-        condition = is_number(limit);
-        if (!condition) {
-            printf("[TICKET] Invalid input. Must be a number.\n");
-        }
-
-    } while (!condition);
-    
-    content[1] = strdup(limit);
-    return create_message(2, content);
+    return create_message(1, content);
 }
 
 message_t *input_ticket_filter_status(FILE *fp) {
     char status[16];
-    char limit[16];
-    char **content = malloc(2 * sizeof(char *));
+    char **content = malloc(sizeof(char *));
 
     int condition = 0;
     do {
@@ -548,40 +502,128 @@ message_t *input_ticket_filter_status(FILE *fp) {
     } while (!condition);
 
     content[0] = strdup(status);
+    return create_message(1, content);
+}
 
-    condition = 0;
+message_t *input_ticket_filter_support_agent(FILE *fp) {
+    char username[256];
+    char **content = malloc(sizeof(char *));
+
+    printf("> username of agent: ");
+    fflush(stdout);
+
+    if (!fgets(username, sizeof(username), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    username[strcspn(username, "\n")] = '\0';
+    content[0] = strdup(username);
+    return create_message(1, content);
+}
+
+message_t *input_ticket_filter_title(FILE *fp) {
+    char title[256];
+    char mode[16];
+    char **content = malloc(2 * sizeof(char *));
+
+    printf("> filter title: ");
+    fflush(stdout);
+
+    if (!fgets(title, sizeof(title), fp)) {
+        free(content);
+        return NULL;
+    }
+
+    title[strcspn(title, "\n")] = '\0';
+    content[0] = strdup(title);
+
+    int condition = 0;
     do {
-        printf("> limit (default = 1): ");
+        printf("Tile matching mode: \n\
+            1- Exact Match\n\
+            2- Contains\n\
+            3- Starts With\n");
+        printf("> ");
         fflush(stdout);
 
-        if (!fgets(limit, sizeof(limit), fp)) {
+        if (!fgets(mode, sizeof(mode), fp)) {
             free(content);
             return NULL;
         }
 
-        limit[strcspn(limit, "\n")] = '\0';
+        mode[strcspn(mode, "\n")] = '\0';
 
-        condition = is_number(limit);
+        condition = is_number(mode);
         if (!condition) {
-            printf("[TICKET] Invalid input. Must be a number.\n");
+            fprintf(stderr, "[TICKET] Invalid input. Must be a number.\n");
         }
 
     } while (!condition);
-    
-    content[1] = strdup(limit);
+
+    content[1] = strdup(mode);
     return create_message(2, content);
 }
 
-message_t *input_ticket_filter_support_agent(FILE *fp) {
-    // TODO
-}
-
-message_t *input_ticket_filter_title(FILE *fp) {
-    // TODO
-}
-
 message_t *input_ticket_filter_date(FILE *fp) {
-    // TODO
+    char mode[16];
+    char dates[2][11];
+    char **content;
+
+    int condition = 0;
+    do {
+        printf("Date matching mode: \n\
+            1- Exact Match\n\
+            2- Before\n\
+            3- After\n\
+            4- Range\n");
+        printf("> ");
+        fflush(stdout);
+
+        if (!fgets(mode, sizeof(mode), fp)) {
+            free(content);
+            return NULL;
+        }
+
+        mode[strcspn(mode, "\n")] = '\0';
+
+        condition = is_number(mode);
+        if (!condition) {
+            fprintf(stderr, "[TICKET] Invalid input. Must be a number.\n");
+        }
+
+    } while (!condition);
+
+    int choice = atoi(mode);
+    size_t size = (choice == 4 /* Range */) ? 3 : 2;
+
+    content = malloc(size * sizeof(char *));
+    content[0] = mode;
+
+    int dates_to_ask = (choice == 4) ? 2 : 1;
+    for (int i = 0; i < dates_to_ask; i++) {
+        do {
+            printf("> %s: ", (choice == 4 && i == 1) ? "second date" : "date");
+            fflush(stdout);
+
+            if (!fgets(dates[i], 11, fp)) {
+                for (int j = 1; j < i + 1; j++) free(content[j]);
+                free(content[0]);
+                free(content);
+                return NULL;
+            }
+
+            dates[i][strcspn(dates[i], "\n")] = '\0';
+
+            if (!(condition = is_valid_date_format(dates[i]))) {
+                printf("[TICKET] Bad date format. Must be YYYY-MM-DD.\n");
+            }
+        } while (!condition);
+
+        content[i + 1] = strdup(dates[i]);
+    }
+
+    return create_message(size, content);
 }
 
 message_t *input_save_tickets(FILE *fp) {

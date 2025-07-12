@@ -105,11 +105,11 @@ response_t *handle_remove_user(session_t *session, message_t *msg) {
 }
 
 response_t *handle_find_users(session_t *session, message_t *msg) {
-    if (msg->size < 2) {
+    if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    int limit = atoi(msg->content[1]);
+    int limit = _count_users();
     user_t **users = malloc(sizeof(user_t *) * limit);
     int count = find_users(msg->content[0], limit, users);
     if (count <= 0) {
@@ -246,11 +246,11 @@ response_t *handle_get_all_tickets(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_priority(session_t *session, message_t *msg) {
-    if (msg->size < 2) {
+    if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    int limit = atoi(msg->content[1]);
+    int limit = count_tickets();
     int count;
     ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
     if (!tickets) {
@@ -274,11 +274,11 @@ response_t *handle_filter_by_priority(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_status(session_t *session, message_t *msg) {
-    if (msg->size < 2) {
+    if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    int limit = atoi(msg->content[1]);
+    int limit = count_tickets();
     int count;
     ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
     if (!tickets) {
@@ -302,14 +302,14 @@ response_t *handle_filter_by_status(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_support_agent(session_t *session, message_t *msg) {
-    if (msg->size < 2) {
+    if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
     user_t *user[1];
-    find_users(msg->content[0], 1, user);
+    find_users(msg->content[0], 1, user); //TODO no limit
 
-    int limit = atoi(msg->content[1]);
+    int limit = count_tickets();
     int count;
     ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
     if (!tickets) {
@@ -332,11 +332,11 @@ response_t *handle_filter_by_support_agent(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_title(session_t *session, message_t *msg) {
-    if (msg->size < 3) {
+    if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    int limit = atoi(msg->content[2]);
+    int limit = count_tickets();
     int count;
     ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
     if (!tickets) {
@@ -359,12 +359,12 @@ response_t *handle_filter_by_title(session_t *session, message_t *msg) {
     return create_response(RESP_OK, out);
 }
 
-response_t *handle_filter_by_date(session_t *session, message_t *msg) {
-    if (msg->size < 4) {
+response_t *handle_filter_by_date(session_t *session, message_t *msg) { // TODO modifica in base al numero di argomenti
+    if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    int limit = atoi(msg->content[3]);
+    int limit = count_tickets();
     int count;
     ticket_t **tickets = malloc(sizeof(ticket_t *) * limit);
     if (!tickets) {
