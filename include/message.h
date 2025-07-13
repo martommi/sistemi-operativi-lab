@@ -13,7 +13,7 @@ typedef struct message {
 message_t *create_message(uint32_t size, char **content);
 message_t *create_message_from_str(const char *str);
 /* Caller should allocate memory for message content but rely on lib function to free it. */
-void free_message(message_t *message);
+void free_message(message_t **message);
 int write_message(int fd, message_t *message);
 /* Memory allocation responsibility is library's */
 int read_message(int fd, message_t **message);

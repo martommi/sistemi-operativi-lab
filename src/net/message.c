@@ -49,17 +49,16 @@ message_t *create_message_from_str(const char *str) {
     return create_message(1, arr);
 }
 
-void free_message(message_t *message) {
-    if (message == NULL) return;
+void free_message(message_t **message) {
+    if (message == NULL || *message == NULL) return;
 
-    for (uint32_t i = 0; i < message->size; i++) {
-        free(message->content[i]);  // Safe to call even if NULL
+    for (uint32_t i = 0; i < (*message)->size; i++) {
+        free((*message)->content[i]);
     }
 
-    free(message->content);
-    message->content = NULL;
-    free(message);
-    message = NULL;
+    free((*message)->content);
+    free(*message);
+    *message = NULL;
 }
 
 int write_message(int fd, message_t *message) {
