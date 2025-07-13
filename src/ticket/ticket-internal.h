@@ -33,7 +33,7 @@ int _set_support_agent(ticket_t *ticket, user_t *support_agent);
 int _set_status(ticket_t *ticket, TicketStatus new_status);
 char *_print_ticket(const ticket_t *ticket);
 
-void _serialize_ticket(FILE *fp, const ticket_t *t);
-ticket_t *_deserialize_ticket(FILE *fp);
+int _serialize_ticket(int fd, const ticket_t *t);
+ticket_t *_deserialize_ticket(int fd);
 int _save_tickets(const char *filename);
 int _load_tickets(const char *filename);

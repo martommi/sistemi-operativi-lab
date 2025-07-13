@@ -24,8 +24,8 @@ int _count_users();
 const char *_privilege_to_string(Privileges p);
 char *_print_user(const user_t *user);
 
-void _serialize_user(FILE *fp, const user_t *u);
-user_t *_deserialize_user(FILE *fp);
+int _serialize_user(int fd, const user_t *u);
+user_t *_deserialize_user(int fd);
 int _save_users(const char *filename);
 int _load_users(const char *filename);
 
