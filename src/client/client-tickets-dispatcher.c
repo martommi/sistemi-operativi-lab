@@ -43,15 +43,26 @@ message_t *input_get_all_tickets(FILE *fp) {
 }
 
 message_t *input_ticket_filter_priority(FILE *fp) {
-    char *tid = prompt_validated_input(fp, "> ticket ID: ", is_number, "[UPDATE] Invalid ticket ID.");
     printf("Filter by priority: \n\
         1- Low\n\
         2- Standard\n\
         3- High\n\
         ");
-    char *status = prompt_validated_input(fp, "> new status: ", is_number, "[TICKET] Invalid input. Must be a number.");
-    if (!tid || !status) return NULL;
-    char *content[] = { tid, status };
+    char *priority = prompt_validated_input(fp, "> filter priority: ", is_number, "[TICKET] Invalid input. Must be a number.");
+    if (!priority) return NULL;
+    char *content[] = { priority };
+    return create_message(2, content);
+}
+
+message_t *input_ticket_filter_status(FILE *fp) {
+    printf("Filter by status: \n\
+        1- Open\n\
+        2- Ongoing\n\
+        3- Closed\n\
+        ");
+    char *status = prompt_validated_input(fp, "> filter status: ", is_number, "[TICKET] Invalid input. Must be a number.");
+    if (!status) return NULL;
+    char *content[] = { status };
     return create_message(2, content);
 }
 
