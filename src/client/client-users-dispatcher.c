@@ -14,7 +14,11 @@ message_t *input_logout(FILE *fp) {
 }
 
 message_t *input_register_user(FILE *fp) {
-    return input_login(fp);   //TODO non mi piace che si chiamano
+    char *username = prompt_string(fp, "> choose a username: ");
+    char *password = prompt_string(fp, "> choose a password: ");
+    if (!username || !password) return NULL;
+    char *content[] = { username, password };
+    return create_message(2, content);
 }
 
 message_t *input_remove_user(FILE *fp) {

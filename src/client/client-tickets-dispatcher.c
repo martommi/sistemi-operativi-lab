@@ -1,6 +1,7 @@
+#include <stdlib.h>
+
 #include "../../include/client-tickets-dispatcher.h"
 #include "../../include/utils.h"
-#include <stdlib.h>
 
 message_t *input_open_ticket(FILE *fp) {
     char *title = prompt_string(fp, "> ticket title: ");
@@ -31,7 +32,7 @@ message_t *input_update_ticket_status(FILE *fp) {
         1- Open\n\
         2- Ongoing\n\
         3- Closed\n\
-        ");
+        \n");
     char *status = prompt_validated_input(fp, "> new status: ", is_number, "[TICKET] Invalid input. Must be a number.");
     if (!tid || !status) return NULL;
     char *content[] = { tid, status };
@@ -47,11 +48,11 @@ message_t *input_ticket_filter_priority(FILE *fp) {
         1- Low\n\
         2- Standard\n\
         3- High\n\
-        ");
+        \n");
     char *priority = prompt_validated_input(fp, "> filter priority: ", is_number, "[TICKET] Invalid input. Must be a number.");
     if (!priority) return NULL;
     char *content[] = { priority };
-    return create_message(2, content);
+    return create_message(1, content);
 }
 
 message_t *input_ticket_filter_status(FILE *fp) {
@@ -59,11 +60,11 @@ message_t *input_ticket_filter_status(FILE *fp) {
         1- Open\n\
         2- Ongoing\n\
         3- Closed\n\
-        ");
+        \n");
     char *status = prompt_validated_input(fp, "> filter status: ", is_number, "[TICKET] Invalid input. Must be a number.");
     if (!status) return NULL;
     char *content[] = { status };
-    return create_message(2, content);
+    return create_message(1, content);
 }
 
 message_t *input_ticket_filter_support_agent(FILE *fp) {
@@ -79,7 +80,7 @@ message_t *input_ticket_filter_title(FILE *fp) {
         1- Exact Match\n\
         2- Contains\n\
         3- Starts With\n\
-        ");
+        \n");
     char *mode = prompt_validated_input(fp, "> mode: ", is_number, "[TICKET] Invalid input. Must be a number.");
     if (!title || !mode) return NULL;
     char *content[] = { title, mode};
