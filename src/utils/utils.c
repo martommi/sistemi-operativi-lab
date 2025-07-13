@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -37,9 +36,17 @@ int is_valid_date_format(const char *date) {
             return 0;
     }
 
-    int year = atoi(date);
-    int month = atoi(date + 5);
-    int day = atoi(date + 8);
+    char year_str[5] = {0};
+    char month_str[3] = {0};
+    char day_str[3] = {0};
+    memcpy(year_str, date, 4);
+    memcpy(month_str, date + 5, 2);
+    memcpy(day_str, date + 8, 2);
+
+    char *endptr;
+    int year = (int)strtol(year_str, &endptr, 10);
+    int month = (int)strtol(month_str, &endptr, 10);
+    int day = (int)strtol(day_str, &endptr, 10);
 
     if (month < 1 || month > 12)
         return 0;
@@ -57,14 +64,14 @@ int is_valid_date_format(const char *date) {
 int is_number(const char *str) {
     if (*str == '\0') return 0;
     while (*str) {
-        if (!isdigit(*str)) return 0;
+        if (!isdigit((unsigned char)*str)) return 0;
         str++;
     }
     return 1;
 }
 
 int is_valid_path(const char *path, int flags) {
-    return access(path, flags) == 0;    /* Checks if path exists and has permissions */
+    return access(path, flags) == 0;
 }
 
 int can_write_file(const char *path) {
@@ -85,9 +92,13 @@ char *prompt_string(FILE *fp, const char *prompt) {
     char buffer[256];
     printf("%s", prompt);
     fflush(stdout);
-    return read_line(fp, buffer, sizeof(buffer)) ? strdup(buffer) : NULL;
+    if (!read_line(fp, buffer, sizeof(buffer))) return NULL;
+    size_t len = strlen(buffer);
+    char *result = malloc(len + 1);
+    if (!result) return NULL;
+    memcpy(result, buffer, len + 1);
+    return result;
 }
-
 
 char *prompt_validated_input(FILE *fp, const char *prompt, int (*validator)(const char *), const char *error_msg) {
     char *input;

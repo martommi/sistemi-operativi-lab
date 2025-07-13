@@ -8,8 +8,12 @@
 #include "../../include/file-utils.h"
 
 int serialize_string(int fd, const char *str) {
+    if (fd < 0) {
+        fprintf(stderr, "%s(): invalid file descriptor.\n", __func__);
+    }
+
     if (!str) {
-        fprintf(stderr, "serialize_string: null pointer\n");
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
         return -1;
     }
 
@@ -18,7 +22,8 @@ int serialize_string(int fd, const char *str) {
 
     if (write_all(fd, &net_len, sizeof(uint32_t)) != sizeof(uint32_t) ||
         write_all(fd, str, len) != len) {
-        // error
+        
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         return -1;
     }
 
@@ -26,10 +31,15 @@ int serialize_string(int fd, const char *str) {
 }
 
 char *deserialize_string(int fd) {
+    if (fd < 0) {
+        fprintf(stderr, "%s(): invalid file descriptor.\n", __func__);
+        return NULL;
+    }
+
     uint32_t net_len;
 
     if (read_all(fd, &net_len, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("read_all(len)");
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         return NULL;
     }
 
@@ -42,7 +52,7 @@ char *deserialize_string(int fd) {
     }
 
     if (read_all(fd, str, len) != (ssize_t)len) {
-        perror("read_all(str)");
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         free(str);
         return NULL;
     }
