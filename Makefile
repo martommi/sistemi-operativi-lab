@@ -2,17 +2,17 @@ CC = gcc
 CFLAGS = -Iinclude -Isrc # tells the compiler where to look for .h
 
 # Server
-SERVER_SRC = src/server/server.c src/auth/session.c
+SERVER_SRC = src/server/server.c $(wildcard src/auth/*.c) $(wildcard src/utils/*-utils.c)
 SERVER_OBJ = $(SERVER_SRC:.c=.o)
 SERVER_TARGET = server
 
 # Client
-CLIENT_SRC = src/client/client.c src/client/client-dispatcher.c src/auth/session.c src/net/protocol.c src/net/request.c src/net/response.c
+CLIENT_SRC = $(wildcard src/client/*.c) $(wildcard src/auth/*.c) $(wildcard src/utils/*.c) $(wildcard src/net/*.c)
 CLIENT_OBJ = $(CLIENT_SRC:.c=.o)
 CLIENT_TARGET = client
 
 # Client handler (aka server instance)
-CLIENT_HANDLER_SRC = src/server/client_handler.c src/server/server-dispatcher.c src/net/protocol.c src/net/request.c src/auth/session.c
+CLIENT_HANDLER_SRC = $(filter-out src/server/server.c, $(wildcard src/server/*.c)) $(wildcard src/net/*.c) $(wildcard src/auth/*.c) $(wildcard src/tickets/*.c) 
 CLIENT_HANDLER_OBJ = $(CLIENT_HANDLER_SRC:.c=.o)
 CLIENT_HANDLER_TARGET = client_handler
 

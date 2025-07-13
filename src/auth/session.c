@@ -5,7 +5,7 @@
 
 #include "../../include/session.h"
 #include "../../include/user-lib.h"
-#include "../auth/user-internal.h"
+#include "user-internal.h"
 
 session_t *create_session(int fd, user_t *user, int logged_in, Privileges privileges) {
     if (fd < 0) {

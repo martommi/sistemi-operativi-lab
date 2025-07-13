@@ -5,13 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../include/response.h"
-#include "../../include/message.h"
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 response_t *create_response(ResponseCode code, message_t *message) {
     response_t *resp = malloc(sizeof(response_t));
     if (!resp) {

@@ -1,6 +1,6 @@
 #include "../../include/protocol.h"
 #include "../../include/message.h"
-#include "../../include/utils.h"
+#include "../../include/file-utils.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
