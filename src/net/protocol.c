@@ -1,63 +1,100 @@
-#include "../../include/protocol.h"
-#include "../../include/message.h"
-#include "../../include/file-utils.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 
-void send_request(int fd, request_t *req) {
+#include "../../include/protocol.h"
+#include "../../include/message.h"
+#include "../../include/file-utils.h"
+
+int send_request(int fd, request_t *req) {
+    if (req == NULL) {
+        fprintf(stderr, "%s(): NULL request.", __func__);
+        return -1;
+    }
+
     int code = htonl((int)req->code);
     if (write_all(fd, &code, sizeof(int)) != sizeof(int)) {
-        perror("write code");
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "%s(): write error.", __func__);
+        return -1;
     }
-    write_message(fd, req->payload);
+
+    if (write_message(fd, req->payload) < 0) {
+        fprintf(stderr, "%s(): write error.", __func__);
+        return -1;
+    }
+
+    return 1;
 }
 
-void recv_request(int fd, request_t **req_out) {
+int recv_request(int fd, request_t **req_out) {
     request_t *req = malloc(sizeof(request_t));
     if (!req) {
         perror("malloc");
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     int code_net;
     if (read_all(fd, &code_net, sizeof(int)) != sizeof(int)) {
-        perror("read code");
+        fprintf(stderr, "%s(): read failed.", __func__);
         free(req);
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     req->code = (RequestCode)ntohl(code_net);
-    read_message(fd, &req->payload);
+    
+    if (read_message(fd, &req->payload) < 0) {
+        fprintf(stderr, "%s(): read failed.", __func__);
+        free(req);
+        return -1;
+    }
+
     *req_out = req;
+    return 1;
 }
 
-void send_response(int fd, response_t *resp) {
+int send_response(int fd, response_t *resp) { 
+    if (resp == NULL) {
+        fprintf(stderr, "%s(): trying to send a null response.", __func__);
+        return -1;
+    }
+
     int code = htonl((int)resp->code);
     if (write_all(fd, &code, sizeof(int)) != sizeof(int)) {
-        perror("write response code");
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "%s(): write failed.", __func__);
+        return -1;
     }
-    write_message(fd, resp->payload);
+
+    if (write_message(fd, resp->payload) < 0) {
+        fprintf(stderr, "%s(): write message failed.", __func__);
+        return -1;
+    }
+
+    return 1;
 }
 
-void recv_response(int fd, response_t **resp_out) {
+int recv_response(int fd, response_t **resp_out) {
     response_t *resp = malloc(sizeof(response_t));
     if (!resp) {
         perror("malloc");
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     int code_net;
     if (read_all(fd, &code_net, sizeof(int)) != sizeof(int)) {
-        perror("read response code");
+        fprintf(stderr, "%s(): read failed.", __func__);
         free(resp);
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     resp->code = (ResponseCode)ntohl(code_net);
-    read_message(fd, &resp->payload);
+    
+    if (read_message(fd, &resp->payload) < 0) {
+        fprintf(stderr, "%s(): read failed.", __func__);
+        free(resp);
+        return -1;
+    }
+
     *resp_out = resp;
+    return 1;
 }
