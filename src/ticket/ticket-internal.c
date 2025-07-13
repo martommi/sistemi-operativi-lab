@@ -17,15 +17,15 @@ static ticket_t *head = NULL;
 static uint32_t tid = 1;
 
 ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
-    if (!title || !desc) {
-        printf("create_ticket(): Title and Description are required fields, please provide them.");
-        exit(EXIT_FAILURE);
+    if (!title || !desc || !date || !priority || !status) {
+        fprintf(stderr, "%s(): Invalid args.\n", __func__);
+        return NULL;
     }
 
     ticket_t *ticket;
     if (!(ticket = (ticket_t *)malloc(sizeof(ticket_t)))) {
         perror("malloc()");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     memset(ticket, 0, sizeof(ticket_t));
@@ -36,17 +36,14 @@ ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority pri
     ticket->date = strdup(date);
     ticket->priority = priority;
     ticket->status = status;
-    ticket->support_agent = support_agent;
+    ticket->support_agent = support_agent;    /* Nullable */
     ticket->next = NULL;
 
     return ticket;
 }
 
 void _free_ticket(ticket_t *target) {
-    if (!target) {
-        printf("free_ticket(): received NULL pointer.");
-        exit(EXIT_FAILURE);
-    }
+    if (target == NULL) return;
 
     if (target->title) free(target->title);
     if (target->description) free(target->description);
@@ -149,13 +146,18 @@ int get_by_tid(const ticket_t *target, va_list args) {
     return target->tid == tid;
 }
 
+int get_by_support_agent(const ticket_t *target, va_list args) {
+    char *username = va_arg(args, char *);
+    return target->support_agent->username == username;
+}
+
 int _add_ticket(ticket_t *ticket) {
     ticket_t *curr = head;
 
     while (curr) {
         if (curr->tid == ticket->tid) {
             fprintf(stderr, "%s(): ticket with TID %u already registered.\n", __func__, ticket->tid);
-            return 0;
+            return -1;
         }
         
         curr = curr->next;
@@ -187,7 +189,7 @@ int _remove_ticket(uint32_t tid) {
     }
 
     fprintf(stderr, "%s(): trying to remove non-existing ticket.\n", __func__);
-    return 0;
+    return -1;
 }
 
 int _count_tickets() {
@@ -237,7 +239,7 @@ char *_print_ticket(const ticket_t *t) {
         t->support_agent->username != NULL ? t->support_agent->username : "N.A."
     ) > len) {
 
-        fprintf(stderr, "%s() error: snprintf returned truncated result.", __func__);
+        fprintf(stderr, "%s() error: snprintf returned truncated result.\n", __func__);
         free(str);
         return NULL;
     }
@@ -246,9 +248,14 @@ char *_print_ticket(const ticket_t *t) {
 }
 
 int _serialize_ticket(int fd, const ticket_t *t) {
+    if (t == NULL) {
+        fprintf(stderr, "%s(): null ticket.", __func__);
+        return -1;
+    }
+
     uint32_t tid_n = htonl(t->tid);
     if (write_all(fd, &tid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("write_all(tid)");
+        fprintf(stderr, "%s(): write failed.", __func__);
         return -1;
     }
 
@@ -256,6 +263,7 @@ int _serialize_ticket(int fd, const ticket_t *t) {
         !serialize_string(fd, t->description) ||
         !serialize_string(fd, t->date)) {
         
+        fprintf(stderr, "%s(): write failed.", __func__);
         return -1;
     }
 
@@ -263,7 +271,8 @@ int _serialize_ticket(int fd, const ticket_t *t) {
     uint32_t st = htonl(t->status);
     if (write_all(fd, &pr, sizeof(uint32_t)) != sizeof(uint32_t) ||
         write_all(fd, &st, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("write_all(tid)");
+        
+        fprintf(stderr, "%s(): write failed.", __func__);
         return -1;
     }
 
@@ -283,7 +292,7 @@ ticket_t *_deserialize_ticket(int fd) {
 
     uint32_t tid_n;
     if (read_all(fd, &tid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("read_all(tid)");
+        fprintf(stderr, "%s(): read failed.", __func__);
         free(ticket);
         return NULL;
     }
@@ -305,7 +314,8 @@ ticket_t *_deserialize_ticket(int fd) {
     uint32_t pr_n, st_n;
     if (read_all(fd, &pr_n, sizeof(uint32_t)) != sizeof(uint32_t) ||
         read_all(fd, &st_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("read_all(priority/status)");
+
+        fprintf(stderr, "%s(): read failed.", __func__);
         free(ticket->title);
         free(ticket->description);
         free(ticket->date);
@@ -317,7 +327,8 @@ ticket_t *_deserialize_ticket(int fd) {
     ticket->status = (TicketStatus)ntohl(st_n);
 
     user_t *user = _deserialize_user(fd);
-    if (!_add_user(user)) {
+
+    if (user == NULL || !_add_user(user)) {
         _free_user(user);
         ticket->support_agent = NULL;
     } else {
@@ -337,6 +348,7 @@ int _save_tickets(const char *filename) {
 
     uint32_t count_n = htonl(_count_tickets());
     if (write_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        fprintf(stderr, "%s(): write failed.", __func__);
         close(fd);
         return -1;
     }
@@ -344,6 +356,7 @@ int _save_tickets(const char *filename) {
     ticket_t *current = head;
     while (current) {
         if (!_serialize_ticket(fd, current)) {
+            fprintf(stderr, "%s(): failed to serialize.", __func__);
             close(fd);
             return -1;
         }
@@ -364,6 +377,7 @@ int _load_tickets(const char *filename) {
 
     uint32_t count_n;
     if (read_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        fprintf(stderr, "%s(): read failed.", __func__);
         close(fd);
         return -1;
     }

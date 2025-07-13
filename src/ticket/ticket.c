@@ -56,11 +56,11 @@ int get_tickets_by_date(ticket_t **dest, DateMatchMode mode, const char *arg1, c
     return _get_tickets(dest, get_by_date, arg1, arg2);
 }
 
-int get_tickets_by_tid(ticket_t **dest, uint32_t tid) {
+int get_ticket_by_tid(ticket_t **dest, uint32_t tid) {
     return _get_tickets(dest, get_by_tid, tid);
 }
 
-char *ticket_to_str(const ticket_t *ticket) {
+char *ticket_to_string(const ticket_t *ticket) {
     return _print_ticket(ticket);
 }
 
