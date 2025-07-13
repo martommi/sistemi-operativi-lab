@@ -5,18 +5,18 @@
 
 #include "../../include/session.h"
 #include "../../include/user-lib.h"
-#include "../auth/user-internal.c"
+#include "../auth/user-internal.h"
 
 session_t *create_session(int fd, user_t *user, int logged_in, Privileges privileges) {
     if (fd < 0) {
-        fprintf(stderr,"%s(): file descriptor is a required field, please provide it.", __func__);
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "%s(): invalid file descriptor.\n", __func__);
+        return NULL;
     }
 
-    session_t *session;
-    if (!(session = (session_t *)malloc(sizeof(session_t)))) {
-        perror("malloc()");
-        exit(EXIT_FAILURE);
+    session_t *session = malloc(sizeof(session_t));
+    if (!session) {
+        perror("malloc");
+        return NULL;
     }
 
     memset(session, 0, sizeof(session_t));
@@ -29,16 +29,26 @@ session_t *create_session(int fd, user_t *user, int logged_in, Privileges privil
     return session;
 }
 
-void end_session(session_t *session) {
-    close(session->fd);
+void end_session(session_t **session_ptr) {
+    if (session_ptr == NULL || *session_ptr == NULL)
+        return;
+
+    session_t *session = *session_ptr;
+
+    if (session->fd >= 0) {
+        close(session->fd);
+        session->fd = -1;
+    }
+
     free(session);
+    *session_ptr = NULL;
 }
 
 user_t *login(session_t *session, char *username, char *passw) {
     user_t *authenticated;
     if (!(authenticated = authenticate(username, passw))) {
         fprintf(stderr, "%s(): wrong credentials.", __func__);
-        return 0;
+        return NULL;
     }
 
     session->logged_in = 1;
@@ -49,6 +59,8 @@ user_t *login(session_t *session, char *username, char *passw) {
 }
 
 void logout(session_t *session) {
+    if (!session) return;
+
     session->logged_in = 0;
     session->privileges = PRIVILEGES_GUEST;
     session->user = NULL;
@@ -59,5 +71,5 @@ int is_logged_in(session_t *session) {
 }
 
 int session_has_privileges(session_t *session, Privileges privileges) {
-    return session->privileges == privileges;
+    return (session->privileges & privileges) == privileges;
 }

@@ -1,25 +1,44 @@
+#include <fcntl.h>
+#include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "user-internal.h"
 #include "../../include/privileges.h"
-#include "../../include/utils.h"
+#include "../../include/string-utils.h"
+#include "../../include/file-utils.h"
 
 static user_t *head = NULL;
 static uint32_t uid = 0;
 
 user_t *_create_user(char *username, char *passw, Privileges privileges) {
-    user_t *user;
-    if (!(user = (user_t *)malloc(sizeof(user_t)))) {
+    user_t *user = (user_t *)malloc(sizeof(user_t));
+    if (!user) {
         perror("malloc()");
         exit(EXIT_FAILURE);
     }
 
     user->uid = uid++;
+
     user->username = strdup(username);
+    if (!user->username) {
+        perror("strdup username");
+        free(user);
+        exit(EXIT_FAILURE);
+    }
+
     user->password = strdup(passw);
+    if (!user->password) {
+        perror("strdup password");
+        free(user->username);
+        free(user);
+        exit(EXIT_FAILURE);
+    }
+
     user->privileges = privileges;
     user->next = NULL;
 
@@ -103,10 +122,9 @@ user_t *_authenticate(const char *username, const char *passw) {
 }
 
 int _count_users() {
-    int count;
+    int count = 0;
     for (user_t *cur = head; cur; cur = cur->next)
         count++;
-
     return count;
 }
 
@@ -121,7 +139,7 @@ const char *_privilege_to_string(Privileges p) {
 
 char *_print_user(const user_t *u) {
     size_t len = snprintf(NULL, 0, 
-        "ID: %d/n Username: %s/n Privileges: %s/n",
+        "ID: %d\n Username: %s\n Privileges: %s\n",
         u->uid,
         u->username,
         _privilege_to_string(u->privileges)
@@ -134,7 +152,7 @@ char *_print_user(const user_t *u) {
     }
 
     if (snprintf(str, len + 1, 
-        "ID: %d/n Username: %s/n Privileges: %s/n",
+        "ID: %d\n Username: %s\n Privileges: %s\n",
         u->uid,
         u->username,
         _privilege_to_string(u->privileges)
@@ -148,63 +166,126 @@ char *_print_user(const user_t *u) {
     return str;
 }
 
-void _serialize_user(FILE *fp, const user_t *u) {
-    fwrite(&u->uid, sizeof(uint32_t), 1, fp);
-    serialize_string(fp, u->username);
-    serialize_string(fp, u->password);
-    fwrite(&u->privileges, sizeof(Privileges), 1, fp);
+int _serialize_user(int fd, const user_t *u) {
+    uint32_t uid_n = htonl(u->uid);
+    if (write_all(fd, &uid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        return -1;
+    }
+
+    if (!serialize_string(fd, u->username) ||
+        !serialize_string(fd, u->password)) {
+        return -1;
+    }
+
+    uint32_t priv_n = htonl(u->privileges);
+    if (write_all(fd, &priv_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        return -1;
+    }
+
+    return 1;
 }
 
-user_t *_deserialize_user(FILE *fp) {
+user_t *_deserialize_user(int fd) {
     user_t *user = malloc(sizeof(user_t));
     if (!user) {
         perror("malloc()");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
-    fread(&user->uid, sizeof(uint32_t), 1, fp);
-    user->username = deserialize_string(fp);
-    user->password = deserialize_string(fp);
-    fread(&user->privileges, sizeof(Privileges), 1, fp);
+    uint32_t uid_n;
+    if (read_all(fd, &uid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        perror("fread uid");
+        free(user);
+        return NULL;
+    }
+
+    uint32_t uid = ntohl(uid_n);
+    user->uid = uid;
+
+    user->username = deserialize_string(fd);
+    if (!user->username) {
+        fprintf(stderr, "Failed to deserialize username\n");
+        free(user);
+        return NULL;
+    }
+
+    user->password = deserialize_string(fd);
+    if (!user->password) {
+        fprintf(stderr, "Failed to deserialize password\n");
+        free(user->username);
+        free(user);
+        return NULL;
+    }
+
+    uint32_t priv_n;
+    if (read_all(fd, &priv_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        perror("fread privileges");
+        free(user->username);
+        free(user->password);
+        free(user);
+        return NULL;
+    }
+
+    uint32_t priv = ntohl(priv_n);
+    user->privileges = priv;
+
+    user->next = NULL;
     return user;
 }
 
 int _save_users(const char *filename) {
-    FILE *fp = fopen(filename, "w");
-    if (!fp) {
-        perror("fopen()");
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        perror("open()");
         return -1;
     }
 
-    int count = _count_users();
-    fwrite(&count, sizeof(int), 1, fp);
+    uint32_t count_n = htonl(_count_users());
+    if (write_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        close(fd);
+        return -1;
+    }
 
     user_t *current = head;
     while (current) {
-        _serialize_user(fp, current);
+        if (!_serialize_user(fd, current)) {
+            close(fd);
+            return -1;
+        }
+
         current = current->next;
     }
 
-    fclose(fp);
+    close(fd);
     return 1;
 }
 
 int _load_users(const char *filename) {
-    FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        perror("fopen()");
+    int fd = open(filename, O_RDONLY, 0644);
+    if (fd == -1) {
+        perror("open()");
         return -1;
     }
 
-    int count;
-    fread(&count, sizeof(int), 1, fp);
+    uint32_t count_n;
+    if (read_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        close(fd);
+        return -1;
+    }
+
+    uint32_t count = ntohl(count_n);
 
     while (count > 0) {
-        user_t *user = _deserialize_user(fp);
+        user_t *user = _deserialize_user(fd);
+        if (!user) {
+            close(fd);
+            return -1;
+        }
+
         _add_user(user);
         count--;
     }
-
-    fclose(fp);
+    
+    close(fd);
     return 1;
 }

@@ -34,5 +34,5 @@ int main(int argc, char* argv[]) {
         free_request(req);
     }
     
-    end_session(session);
+    end_session(&session);
 }

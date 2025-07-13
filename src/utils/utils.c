@@ -1,33 +1,15 @@
+#include <netinet/in.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
 
 #include "../../include/utils.h"
-
-void serialize_string(FILE *fp, const char *str) {
-    int len = strlen(str);
-    fwrite(&len, sizeof(int), 1, fp);
-    fwrite(str, sizeof(char), len, fp);
-}
-
-char *deserialize_string(FILE *fp) {
-    int len;
-    char *str;
-    fread(&len, sizeof(int), 1, fp);
-
-    str = malloc(sizeof(char) * len);
-    if (!str) {
-        perror("malloc()");
-        exit(EXIT_FAILURE);
-    }
-
-    fread(str, sizeof(char), len, fp);
-    return str;
-}
 
 const char *get_today() {
     static char buf[11];
@@ -83,4 +65,42 @@ int is_number(const char *str) {
 
 int is_valid_path(const char *path, int flags) {
     return access(path, flags) == 0;    /* Checks if path exists and has permissions */
+}
+
+int can_write_file(const char *path) {
+    return is_valid_path(path, F_OK | W_OK);
+}
+
+int can_read_file(const char *path) {
+    return is_valid_path(path, F_OK | R_OK);
+}
+
+int read_line(FILE *fp, char *buffer, size_t size) {
+    if (!fgets(buffer, size, fp)) return 0;
+    buffer[strcspn(buffer, "\n")] = '\0';
+    return 1;
+}
+
+char *prompt_string(FILE *fp, const char *prompt) {
+    char buffer[256];
+    printf("%s", prompt);
+    fflush(stdout);
+    return read_line(fp, buffer, sizeof(buffer)) ? strdup(buffer) : NULL;
+}
+
+
+char *prompt_validated_input(FILE *fp, const char *prompt, int (*validator)(const char *), const char *error_msg) {
+    char *input;
+    do {
+        input = prompt_string(fp, prompt);
+        if (!input) return NULL;
+
+        if (!validator(input)) {
+            fprintf(stderr, "%s\n", error_msg);
+            free(input);
+            input = NULL;
+        }
+    } while (!input);
+
+    return input;
 }

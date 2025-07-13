@@ -1,18 +1,23 @@
-#include "ticket-internal.h"
-#include "../auth/user-internal.h"
-#include "../../include/utils.h"
-#include "../../include/ticket.h"
+#include <netinet/in.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include "ticket-internal.h"
+#include "../auth/user-internal.h"
+#include "../../include/string-utils.h"
+#include "../../include/file-utils.h"
+#include "../../include/ticket.h"
 
 static ticket_t *head = NULL;
 static uint32_t tid = 1;
 
 ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
-    if (!title && !desc) {
+    if (!title || !desc) {
         printf("create_ticket(): Title and Description are required fields, please provide them.");
         exit(EXIT_FAILURE);
     }
@@ -26,9 +31,9 @@ ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority pri
     memset(ticket, 0, sizeof(ticket_t));
 
     ticket->tid = tid++;
-    ticket->title = title;
-    ticket->description = desc;
-    ticket->date = date;
+    ticket->title = strdup(title);
+    ticket->description = strdup(desc);
+    ticket->date = strdup(date);
     ticket->priority = priority;
     ticket->status = status;
     ticket->support_agent = support_agent;
@@ -43,9 +48,9 @@ void _free_ticket(ticket_t *target) {
         exit(EXIT_FAILURE);
     }
 
-    free(target->title);
-    free(target->description);
-    free(target->date);
+    if (target->title) free(target->title);
+    if (target->description) free(target->description);
+    if (target->date) free(target->date);
     free(target);
 }
 
@@ -186,7 +191,7 @@ int _remove_ticket(uint32_t tid) {
 }
 
 int _count_tickets() {
-    int count;
+    int count = 0;
     for (ticket_t *cur = head; cur; cur = cur->next)
         count++;
 
@@ -199,19 +204,20 @@ int _set_support_agent(ticket_t *ticket, user_t *support_agent) {
 }
 
 int _set_status(ticket_t *ticket, TicketStatus new_status) {
-    return ticket->status = new_status;
+    ticket->status = new_status;
+    return 1;
 }
 
 char *_print_ticket(const ticket_t *t) {
     size_t len = snprintf(NULL, 0, 
-        "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
+        "ID: %d\n Title: %s\n Description: %s\n Date: %s\n Priority: %d\n Status: %d\n Agent: %s\n",
         t->tid,
         t->title,
         t->description,
         t->date,
         t->priority,
         t->status,
-        t->support_agent->username != NULL ? t->support_agent->username : "NULL"
+        t->support_agent->username != NULL ? t->support_agent->username : "N.A."
     );
 
     char *str = calloc(1, len + 1);
@@ -221,7 +227,7 @@ char *_print_ticket(const ticket_t *t) {
     }
 
     if (snprintf(str, len + 1, 
-        "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
+        "ID: %d\n Title: %s\n Description: %s\n Date: %s\n Priority: %d\n Status: %d\n Agent: %s\n",
         t->tid,
         t->title,
         t->description,
@@ -229,7 +235,7 @@ char *_print_ticket(const ticket_t *t) {
         t->priority,
         t->status,
         t->support_agent->username != NULL ? t->support_agent->username : "N.A."
-    ) > len + 1) {
+    ) > len) {
 
         fprintf(stderr, "%s() error: snprintf returned truncated result.", __func__);
         free(str);
@@ -239,73 +245,142 @@ char *_print_ticket(const ticket_t *t) {
     return str;
 }
 
-void _serialize_ticket(FILE *fp, const ticket_t *t) {
-    fwrite(&t->tid, sizeof(uint32_t), 1, fp);
-    serialize_string(fp, t->title);
-    serialize_string(fp, t->description);
-    serialize_string(fp, t->date);
-    fwrite(&t->priority, sizeof(TicketPriority), 1, fp);
-    fwrite(&t->status, sizeof(TicketStatus), 1, fp);
-    _serialize_user(fp, t->support_agent);
+int _serialize_ticket(int fd, const ticket_t *t) {
+    uint32_t tid_n = htonl(t->tid);
+    if (write_all(fd, &tid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        perror("write_all(tid)");
+        return -1;
+    }
+
+    if (!serialize_string(fd, t->title) ||
+        !serialize_string(fd, t->description) ||
+        !serialize_string(fd, t->date)) {
+        
+        return -1;
+    }
+
+    uint32_t pr = htonl(t->priority);
+    uint32_t st = htonl(t->status);
+    if (write_all(fd, &pr, sizeof(uint32_t)) != sizeof(uint32_t) ||
+        write_all(fd, &st, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        perror("write_all(tid)");
+        return -1;
+    }
+
+    if (!_serialize_user(fd, t->support_agent)) {
+        return -1;
+    }
+
+    return 1;
 }
 
-ticket_t *_deserialize_ticket(FILE *fp) {
+ticket_t *_deserialize_ticket(int fd) {
     ticket_t *ticket = malloc(sizeof(ticket_t));
+    if (!ticket) {
+        perror("malloc()");
+        return NULL;
+    }
 
-    fread(&ticket->tid, sizeof(uint32_t), 1, fp);
-    ticket->title = deserialize_string(fp);
-    ticket->description = deserialize_string(fp);
-    ticket->date = deserialize_string(fp);
-    fread(&ticket->priority, sizeof(TicketPriority), 1, fp);
-    fread(&ticket->status, sizeof(TicketStatus), 1, fp);
+    uint32_t tid_n;
+    if (read_all(fd, &tid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        perror("read_all(tid)");
+        free(ticket);
+        return NULL;
+    }
 
-    user_t *user = _deserialize_user(fp);
+    ticket->tid = ntohl(tid_n);
+
+    ticket->title = deserialize_string(fd);
+    ticket->description = deserialize_string(fd);
+    ticket->date = deserialize_string(fd);
+
+    if (!ticket->title || !ticket->description || !ticket->date) {
+        free(ticket->title);
+        free(ticket->description);
+        free(ticket->date);
+        free(ticket);
+        return NULL;
+    }
+
+    uint32_t pr_n, st_n;
+    if (read_all(fd, &pr_n, sizeof(uint32_t)) != sizeof(uint32_t) ||
+        read_all(fd, &st_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        perror("read_all(priority/status)");
+        free(ticket->title);
+        free(ticket->description);
+        free(ticket->date);
+        free(ticket);
+        return NULL;
+    }
+    
+    ticket->priority = (TicketPriority)ntohl(pr_n);
+    ticket->status = (TicketStatus)ntohl(st_n);
+
+    user_t *user = _deserialize_user(fd);
     if (!_add_user(user)) {
         _free_user(user);
         ticket->support_agent = NULL;
-        return ticket;
+    } else {
+        ticket->support_agent = user;
     }
 
-    ticket->support_agent = user;
+    ticket->next = NULL;
     return ticket;
 }
 
 int _save_tickets(const char *filename) {
-    FILE *file = fopen(filename, "w");
-    if (!file) {
-        perror("fopen()");
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        perror("open()");
         return -1;
     }
 
-    int count = _count_tickets();
-    fwrite(&count, sizeof(int), 1, file);
+    uint32_t count_n = htonl(_count_tickets());
+    if (write_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        close(fd);
+        return -1;
+    }
 
     ticket_t *current = head;
     while (current) {
-        _serialize_ticket(file, current);
+        if (!_serialize_ticket(fd, current)) {
+            close(fd);
+            return -1;
+        }
+
         current = current->next;
     }
 
-    fclose(file);
+    close(fd);
     return 1;
 }
 
 int _load_tickets(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("fopen()");
+    int fd = open(filename, O_RDONLY, 0644);
+    if (fd == -1) {
+        perror("open()");
         return -1;
     }
 
-    int count;
-    fread(&count, sizeof(int), 1, file);
+    uint32_t count_n;
+    if (read_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        close(fd);
+        return -1;
+    }
+
+    uint32_t count = ntohl(count_n);
 
     while (count > 0) {
-        ticket_t *ticket = _deserialize_ticket(file);
+        ticket_t *ticket = _deserialize_ticket(fd);
+        if (!ticket) {
+            close(fd);
+            return -1;
+        }
+
         _add_ticket(ticket);
         count--;
     }
     
-    fclose(file);
+    close(fd);
     return 1;
 }

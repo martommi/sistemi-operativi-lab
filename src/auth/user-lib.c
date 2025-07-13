@@ -1,17 +1,23 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "user-lib.h"
+#include "../../include/user-lib.h"
 #include "user-internal.h"
 
 int register_user(char *username, char *passw, Privileges privileges) {
     user_t *user = _create_user(username, passw, privileges);
+    if (!user) {
+        fprintf(stderr, "%s(): failed to create user\n", __func__);
+        return -1;
+    }
 
-    if (_add_user(user)) return 1;
+    if (!_add_user(user)) {
+        fprintf(stderr, "%s(): failed to register user '%s' with UID %u (already exists?)\n", __func__, user->username, user->uid);
+        _free_user(user);
+        return 0;
+    }
 
-    fprintf(stderr, "%s(): failed to register user %u (already exists?)\n", __func__, user->uid);
-    _free_user(user);
-    return 0;
+    return 1;
 }
 
 int remove_user(uint32_t uid) {
@@ -19,7 +25,7 @@ int remove_user(uint32_t uid) {
 }
 
 int find_users(const char *username, int limit, user_t **found) {
-    if (!username || limit <= 1 || !found) {
+    if (!username || limit < 1 || !found) {
         fprintf(stderr, "%s(): invalid arguments\n", __func__);
         return -1;
     }
@@ -45,10 +51,12 @@ int has_privileges(const user_t *user, Privileges privileges) {
 }
 
 void grant_privileges(user_t *user, Privileges privileges) {
+    if (!user) return;
     user->privileges |= privileges;
 }
 
 void revoke_privileges(user_t *user, Privileges privileges) {
+    if (!user) return;
     user->privileges &= ~privileges;
 }
 
