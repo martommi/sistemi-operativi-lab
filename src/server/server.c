@@ -8,8 +8,8 @@
 #include "../../include/session.h"
 
 #define MAX_CLIENTS 5
-#define CLIENT_HANDLER_NAME "client_handler"
-#define CLIENT_HANDLER_PATH "./bin/" CLIENT_HANDLER_NAME
+#define CLIENT_HANDLER_NAME ".client_handler"
+#define CLIENT_HANDLER_PATH "./bin/internal/" CLIENT_HANDLER_NAME
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr, client_addr;
