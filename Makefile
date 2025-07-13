@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Iinclude -Isrc # tells the compiler where to look for .h
+CFLAGS = -g -O0 -Iinclude -Isrc # tells the compiler where to look for .h
 
 # Server
 SERVER_SRC = src/server/server.c $(wildcard src/auth/*.c) $(wildcard src/utils/*-utils.c)
@@ -12,7 +12,7 @@ CLIENT_OBJ = $(CLIENT_SRC:.c=.o)
 CLIENT_TARGET = client
 
 # Client handler (aka server instance)
-CLIENT_HANDLER_SRC = $(filter-out src/server/server.c, $(wildcard src/server/*.c)) $(wildcard src/net/*.c) $(wildcard src/auth/*.c) $(wildcard src/tickets/*.c) 
+CLIENT_HANDLER_SRC = $(filter-out src/server/server.c, $(wildcard src/server/*.c)) $(wildcard src/net/*.c) $(wildcard src/auth/*.c) $(wildcard src/ticket/*.c) $(wildcard src/utils/*.c) 
 CLIENT_HANDLER_OBJ = $(CLIENT_HANDLER_SRC:.c=.o)
 CLIENT_HANDLER_TARGET = client_handler
 
@@ -32,13 +32,13 @@ $(CLIENT_HANDLER_TARGET): $(CLIENT_HANDLER_OBJ)
 
 install:
 	mkdir -p obj bin/internal etc data
-	mv *.o obj/
+	find . -name '*.o' -exec mv {} obj/ \;
 	mv client server bin/
-	mv client_handler bin/internal/.client_handler
+	mv client_handler bin/internal/
 
 clean:
 	rm -f client server
-	rm -f bin/internal/.client_handler
+	rm -f bin/internal/client_handler
 	rm -f *.o
 	rm -f obj/*.o
 
