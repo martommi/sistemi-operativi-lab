@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Iinclude -Isrc # tells the compiler where to look for .h
 
 # Server
-SERVER_SRC = src/server.c src/auth/session.c
+SERVER_SRC = src/server/server.c src/auth/session.c
 SERVER_OBJ = $(SERVER_SRC:.c=.o)
 SERVER_TARGET = server
 
