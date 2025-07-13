@@ -11,15 +11,29 @@ static user_t *head = NULL;
 static uint32_t uid = 0;
 
 user_t *_create_user(char *username, char *passw, Privileges privileges) {
-    user_t *user;
-    if (!(user = (user_t *)malloc(sizeof(user_t)))) {
+    user_t *user = (user_t *)malloc(sizeof(user_t));
+    if (!user) {
         perror("malloc()");
         exit(EXIT_FAILURE);
     }
 
     user->uid = uid++;
+
     user->username = strdup(username);
+    if (!user->username) {
+        perror("strdup username");
+        free(user);
+        exit(EXIT_FAILURE);
+    }
+
     user->password = strdup(passw);
+    if (!user->password) {
+        perror("strdup password");
+        free(user->username);
+        free(user);
+        exit(EXIT_FAILURE);
+    }
+
     user->privileges = privileges;
     user->next = NULL;
 
@@ -103,10 +117,9 @@ user_t *_authenticate(const char *username, const char *passw) {
 }
 
 int _count_users() {
-    int count;
+    int count = 0;
     for (user_t *cur = head; cur; cur = cur->next)
         count++;
-
     return count;
 }
 
@@ -121,7 +134,7 @@ const char *_privilege_to_string(Privileges p) {
 
 char *_print_user(const user_t *u) {
     size_t len = snprintf(NULL, 0, 
-        "ID: %d/n Username: %s/n Privileges: %s/n",
+        "ID: %d\n Username: %s\n Privileges: %s\n",
         u->uid,
         u->username,
         _privilege_to_string(u->privileges)
@@ -134,7 +147,7 @@ char *_print_user(const user_t *u) {
     }
 
     if (snprintf(str, len + 1, 
-        "ID: %d/n Username: %s/n Privileges: %s/n",
+        "ID: %d\n Username: %s\n Privileges: %s\n",
         u->uid,
         u->username,
         _privilege_to_string(u->privileges)
@@ -159,18 +172,44 @@ user_t *_deserialize_user(FILE *fp) {
     user_t *user = malloc(sizeof(user_t));
     if (!user) {
         perror("malloc()");
-        exit(EXIT_FAILURE);
+        return NULL;  // meglio non exit qui per maggiore flessibilità
     }
 
-    fread(&user->uid, sizeof(uint32_t), 1, fp);
+    if (fread(&user->uid, sizeof(uint32_t), 1, fp) != 1) {
+        perror("fread uid");
+        free(user);
+        return NULL;
+    }
+
     user->username = deserialize_string(fp);
+    if (!user->username) {
+        fprintf(stderr, "Failed to deserialize username\n");
+        free(user);
+        return NULL;
+    }
+
     user->password = deserialize_string(fp);
-    fread(&user->privileges, sizeof(Privileges), 1, fp);
+    if (!user->password) {
+        fprintf(stderr, "Failed to deserialize password\n");
+        free(user->username);
+        free(user);
+        return NULL;
+    }
+
+    if (fread(&user->privileges, sizeof(Privileges), 1, fp) != 1) {
+        perror("fread privileges");
+        free(user->username);
+        free(user->password);
+        free(user);
+        return NULL;
+    }
+
+    user->next = NULL;
     return user;
 }
 
 int _save_users(const char *filename) {
-    FILE *fp = fopen(filename, "w");
+    FILE *fp = fopen(filename, "wb");
     if (!fp) {
         perror("fopen()");
         return -1;
@@ -190,7 +229,7 @@ int _save_users(const char *filename) {
 }
 
 int _load_users(const char *filename) {
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "rb");
     if (!fp) {
         perror("fopen()");
         return -1;

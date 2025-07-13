@@ -12,7 +12,7 @@ static ticket_t *head = NULL;
 static uint32_t tid = 1;
 
 ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
-    if (!title && !desc) {
+    if (!title || !desc) {
         printf("create_ticket(): Title and Description are required fields, please provide them.");
         exit(EXIT_FAILURE);
     }
@@ -26,9 +26,9 @@ ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority pri
     memset(ticket, 0, sizeof(ticket_t));
 
     ticket->tid = tid++;
-    ticket->title = title;
-    ticket->description = desc;
-    ticket->date = date;
+    ticket->title = strdup(title);
+    ticket->description = strdup(desc);
+    ticket->date = strdup(date);
     ticket->priority = priority;
     ticket->status = status;
     ticket->support_agent = support_agent;
@@ -43,9 +43,9 @@ void _free_ticket(ticket_t *target) {
         exit(EXIT_FAILURE);
     }
 
-    free(target->title);
-    free(target->description);
-    free(target->date);
+    if (target->title) free(target->title);
+    if (target->description) free(target->description);
+    if (target->date) free(target->date);
     free(target);
 }
 
@@ -186,7 +186,7 @@ int _remove_ticket(uint32_t tid) {
 }
 
 int _count_tickets() {
-    int count;
+    int count = 0;
     for (ticket_t *cur = head; cur; cur = cur->next)
         count++;
 
@@ -199,19 +199,20 @@ int _set_support_agent(ticket_t *ticket, user_t *support_agent) {
 }
 
 int _set_status(ticket_t *ticket, TicketStatus new_status) {
-    return ticket->status = new_status;
+    ticket->status = new_status;
+    return 1;
 }
 
 char *_print_ticket(const ticket_t *t) {
     size_t len = snprintf(NULL, 0, 
-        "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
+        "ID: %d\n Title: %s\n Description: %s\n Date: %s\n Priority: %d\n Status: %d\n Agent: %s\n",
         t->tid,
         t->title,
         t->description,
         t->date,
         t->priority,
         t->status,
-        t->support_agent->username != NULL ? t->support_agent->username : "NULL"
+        t->support_agent->username != NULL ? t->support_agent->username : "N.A."
     );
 
     char *str = calloc(1, len + 1);
@@ -221,7 +222,7 @@ char *_print_ticket(const ticket_t *t) {
     }
 
     if (snprintf(str, len + 1, 
-        "ID: %d/n Title: %s/n Description: %s/n Date: %s/n Priority: %d/n Status: %d/n Agent: %s/n",
+        "ID: %d\n Title: %s\n Description: %s\n Date: %s\n Priority: %d\n Status: %d\n Agent: %s\n",
         t->tid,
         t->title,
         t->description,
@@ -229,7 +230,7 @@ char *_print_ticket(const ticket_t *t) {
         t->priority,
         t->status,
         t->support_agent->username != NULL ? t->support_agent->username : "N.A."
-    ) > len + 1) {
+    ) > len) {
 
         fprintf(stderr, "%s() error: snprintf returned truncated result.", __func__);
         free(str);
@@ -271,7 +272,7 @@ ticket_t *_deserialize_ticket(FILE *fp) {
 }
 
 int _save_tickets(const char *filename) {
-    FILE *file = fopen(filename, "w");
+    FILE *file = fopen(filename, "wb");
     if (!file) {
         perror("fopen()");
         return -1;
@@ -291,7 +292,7 @@ int _save_tickets(const char *filename) {
 }
 
 int _load_tickets(const char *filename) {
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("fopen()");
         return -1;
