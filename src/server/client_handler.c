@@ -1,5 +1,7 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "../../include/session.h"
 #include "../../include/privileges.h"
@@ -21,6 +23,8 @@ int main(int argc, char* argv[]) {
     }
 
     session_t *session = create_session(client_sock, NULL, 0, PRIVILEGES_GUEST);
+
+    init_test_users();
 
     while (1) {
         request_t *req = NULL;

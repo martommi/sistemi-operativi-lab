@@ -1,6 +1,9 @@
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "../../include/server-dispatcher.h"
 #include "../../include/server-tickets-dispatcher.h"
@@ -78,4 +81,51 @@ response_t *handle_quit(session_t *session, message_t *msg) {
     free_message(msg);
 
     return create_response(RESP_EXIT, create_message_from_str("[SERVER] Users and tickets saved. You will now be disconnected."));
+}
+
+void init_test_users(void) {
+    const char *filename = "../../etc/users-config.dat";
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) return;
+
+    struct stat st;
+    if (fstat(fd, &st) == -1 || st.st_size == 0) {
+        close(fd);
+        return;
+    }
+
+    char *buffer = malloc(st.st_size + 1);
+    if (!buffer) {
+        close(fd);
+        return;
+    }
+
+    if (read(fd, buffer, st.st_size) != st.st_size) {
+        free(buffer);
+        close(fd);
+        return;
+    }
+
+    buffer[st.st_size] = '\0';
+    close(fd);
+
+    char *line = strtok(buffer, "\n");
+    while (line) {
+        char *sep = strchr(line, ':');
+        if (sep) {
+            *sep = '\0';
+            char *username = line;
+            char *password = sep + 1;
+            int privileges;
+
+            if (strcmp(username, "admin") == 0) privileges = PRIVILEGES_ADMIN;
+            else if (strcmp(username, "agent") == 0) privileges = PRIVILEGES_SUPPORT_AGENT;
+            else return;
+
+            register_user(username, password, privileges);
+        }
+        line = strtok(NULL, "\n");
+    }
+
+    free(buffer);
 }
