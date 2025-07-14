@@ -28,9 +28,12 @@ int main(int argc, char* argv[]) {
 
     while (1) {
         request_t *req = NULL;
-        recv_request(client_sock, &req);
+        if (recv_request(client_sock, &req) < 0) {
+            fprintf(stderr, "%s(): failed to receive request.\n", __func__);
+            continue;
+        }
 
-        if (!handle_request(session, req)) {    /* if it receives an exit code, ends session */
+        if (handle_request(session, req) <= 0) {    /* if it receives an exit code, ends session */
             free_request(req);
             break;
         }

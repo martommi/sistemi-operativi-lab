@@ -10,9 +10,9 @@
 
 typedef enum ResponseCode {
     RESP_ERROR = -1,
+    RESP_EXIT,
     RESP_INVALID_REQUEST,
-    RESP_OK,
-    RESP_EXIT
+    RESP_OK
 } ResponseCode;
 
 typedef struct response {

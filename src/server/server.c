@@ -8,7 +8,7 @@
 #include "../../include/session.h"
 
 #define MAX_CLIENTS 5
-#define CLIENT_HANDLER_NAME ".client_handler"
+#define CLIENT_HANDLER_NAME "client_handler"
 #define CLIENT_HANDLER_PATH "./bin/internal/" CLIENT_HANDLER_NAME
 
 int main(int argc, char *argv[]) {

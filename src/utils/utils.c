@@ -115,3 +115,11 @@ char *prompt_validated_input(FILE *fp, const char *prompt, int (*validator)(cons
 
     return input;
 }
+
+char *generate_day_code() {
+    static char code[32];
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    strftime(code, sizeof(code), "%Y%m%d_%H%M%S", tm_info);
+    return code;
+}

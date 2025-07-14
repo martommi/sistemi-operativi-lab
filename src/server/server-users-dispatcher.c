@@ -1,26 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "../../include/server-users-dispatcher.h"
 #include "../../include/user-lib.h"
 #include "../auth/user-internal.h"
 #include "../../include/privileges.h"
-#include <stdlib.h>
 
 response_t *handle_login(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
 
-    return login(session, msg->content[0], msg->content[1])
+    return login(session, msg->content[0], msg->content[1]) != NULL
         ? create_response(RESP_OK, create_message_from_str("[LOGIN] Login successful."))
         : create_response(RESP_ERROR, create_message_from_str("[LOGIN] Invalid credentials."));
 }
 
 response_t *handle_logout(session_t *session, message_t *msg) {
+    if (session == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (!is_logged_in(session)) return create_response(RESP_ERROR, create_message_from_str("[LOGOUT] No user is currently logged in."));
     logout(session);
     return create_response(RESP_OK, create_message_from_str("[LOGOUT] Logged out."));
 }
 
 response_t *handle_register_user(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -31,6 +48,11 @@ response_t *handle_register_user(session_t *session, message_t *msg) {
 }
 
 response_t *handle_remove_user(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (!session_has_privileges(session, PRIVILEGES_ADMIN)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing privileges: ADMIN."));
     }
@@ -45,6 +67,11 @@ response_t *handle_remove_user(session_t *session, message_t *msg) {
 }
 
 response_t *handle_find_users(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -71,6 +98,11 @@ response_t *handle_find_users(session_t *session, message_t *msg) {
 }
 
 response_t *handle_save_users(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (!is_logged_in(session)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] You must be logged in to perform this operation."));
     }
@@ -85,6 +117,11 @@ response_t *handle_save_users(session_t *session, message_t *msg) {
 }
 
 response_t *handle_load_users(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+    
     if (!session_has_privileges(session, PRIVILEGES_ADMIN | PRIVILEGES_SUPPORT_AGENT)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT"));
     }

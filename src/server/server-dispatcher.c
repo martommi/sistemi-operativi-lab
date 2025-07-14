@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -14,6 +15,7 @@
 #include "../../include/request.h"
 #include "../../include/response.h"
 #include "../../include/ticket.h"
+#include "../../include/utils.h"
 
 #define DEFAULT_USERS_PATH "../../data/users/"
 #define DEFAULT_TICKETS_PATH "../../data/tickets/"
@@ -61,7 +63,15 @@ int handle_request(session_t *session, request_t *req) {
         resp = fn(session, req->payload);
     }
 
-    send_response(session->fd, resp);
+    if (resp == NULL) {
+        fprintf(stderr, "%s(): null response.\n", __func__);
+        return -1;
+    }
+
+    if (send_response(session->fd, resp) < 0) {
+        fprintf(stderr, "%s(): error sending response.\n", __func__);
+        return -1;
+    }
 
     int keep_session_alive = (resp->code == RESP_EXIT);
     free_response(resp);
@@ -69,16 +79,24 @@ int handle_request(session_t *session, request_t *req) {
 }
 
 response_t *handle_invalid_request() {
-    return create_response(RESP_INVALID_REQUEST, create_message_from_str("[SERVER] Invalid code."));
+    return create_response(RESP_INVALID_REQUEST, create_message_from_str("[SERVER] Invalid code.\n"));
 }
 
 response_t *handle_quit(session_t *session, message_t *msg) {
-    //generate day code
-    char *name = "";
-    save_users(strcat(DEFAULT_USERS_PATH, name));
-    save_tickets(strcat(DEFAULT_TICKETS_PATH, name));
+    const char *code = generate_day_code();
 
-    free_message(msg);
+    char user_path[256];
+    char ticket_path[256];
+
+    snprintf(user_path, sizeof(user_path), "%s_%s", DEFAULT_USERS_PATH, code);
+    snprintf(ticket_path, sizeof(ticket_path), "%s_%s", DEFAULT_TICKETS_PATH, code);
+
+    if (save_users(user_path) < 0 || save_tickets(ticket_path) < 0) {
+        fprintf(stderr, "%s(): failed to save on file.\n", __func__);
+        return NULL;
+    }
+
+    free_message(&msg);
 
     return create_response(RESP_EXIT, create_message_from_str("[SERVER] Users and tickets saved. You will now be disconnected."));
 }

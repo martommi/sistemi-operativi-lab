@@ -14,5 +14,6 @@ int can_read_file(const char *path);
 int can_write_file(const char *path);
 char *prompt_string(FILE *fp, const char *prompt);
 char *prompt_validated_input(FILE *fp, const char *prompt, int (*validator)(const char *), const char *error_msg);
+char *generate_day_code();
 
 #endif

@@ -3,6 +3,11 @@
 #include "../../include/user-lib.h"
 
 response_t *handle_open_ticket(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 3) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));    
     }
@@ -15,6 +20,11 @@ response_t *handle_open_ticket(session_t *session, message_t *msg) {
 }
 
 response_t *handle_delete_ticket(session_t *session, message_t *msg) { 
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (!session_has_privileges(session, PRIVILEGES_ADMIN | PRIVILEGES_SUPPORT_AGENT)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT"));
     }
@@ -29,6 +39,11 @@ response_t *handle_delete_ticket(session_t *session, message_t *msg) {
 }
 
 response_t *handle_assign_ticket(session_t *session, message_t *msg) { 
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (!session_has_privileges(session, PRIVILEGES_ADMIN | PRIVILEGES_SUPPORT_AGENT)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT"));
     }
@@ -52,6 +67,11 @@ response_t *handle_assign_ticket(session_t *session, message_t *msg) {
 }
 
 response_t *handle_update_ticket_status(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -65,6 +85,11 @@ response_t *handle_update_ticket_status(session_t *session, message_t *msg) {
 }
 
 response_t *handle_get_all_tickets(session_t *session, message_t *msg) {
+    if (session == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     int total = count_tickets();
 
     if (total <= 0) {
@@ -90,6 +115,11 @@ response_t *handle_get_all_tickets(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_priority(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -118,6 +148,11 @@ response_t *handle_filter_by_priority(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_status(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -146,6 +181,11 @@ response_t *handle_filter_by_status(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_support_agent(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 1) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -176,6 +216,11 @@ response_t *handle_filter_by_support_agent(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_title(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -204,6 +249,11 @@ response_t *handle_filter_by_title(session_t *session, message_t *msg) {
 }
 
 response_t *handle_filter_by_date(session_t *session, message_t *msg) { // TODO modifica in base al numero di argomenti
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
     }
@@ -232,6 +282,11 @@ response_t *handle_filter_by_date(session_t *session, message_t *msg) { // TODO 
 }
 
 response_t *handle_save_tickets(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+
     if (!is_logged_in(session)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] You must be logged in to perform this operation."));
     }
@@ -246,6 +301,11 @@ response_t *handle_save_tickets(session_t *session, message_t *msg) {
 }
 
 response_t *handle_load_tickets(session_t *session, message_t *msg) {
+    if (msg == NULL || session == NULL || msg->content == NULL) {
+        fprintf(stderr, "%s(): null pointer.\n", __func__);
+        return NULL;
+    }
+    
     if (!session_has_privileges(session, PRIVILEGES_ADMIN | PRIVILEGES_SUPPORT_AGENT)) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT"));
     }
