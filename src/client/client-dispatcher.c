@@ -3,10 +3,8 @@
 #include "../../include/client-users-dispatcher.h"
 
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #define DISPATCH_TABLE_SIZE (sizeof(dispatch_table) / sizeof(dispatcher_t))
@@ -37,7 +35,8 @@ static dispatcher_t dispatch_table[] = {
 };
 
 void print_menu() {
-    char *menu = "Choose an option:\
+    char *menu = "Choose an option:\n\
+    0- Help\n\
     1- Login \n\
     2- Logout \n\
     3- Register user \n\
@@ -58,7 +57,7 @@ void print_menu() {
     18- Save tickets on file \n\
     19- Load tickets from file \n\
     20- Disconnect \n\
-    ";
+    \n";
 
     printf("%s", menu);
 }
@@ -72,11 +71,17 @@ int compose_request(FILE *fp, request_t **req_ptr) {
         return -1;
     }
 
+    if (choice == 0) {
+        print_menu();
+        *req_ptr = NULL;
+        return 0;
+    }
+
     int c;
-    while ((c = fgetc(fp)) != '\n' && c != EOF);    /* Flush newline */
+    while ((c = fgetc(fp)) != '\n' && c != EOF) {}     /* Flush newline */
 
     input_handler handler_fn = NULL;
-    for (size_t i = 0; i < sizeof(dispatch_table)/sizeof(dispatch_table[0]); i++) {
+    for (size_t i = 0; i < DISPATCH_TABLE_SIZE; i++) {
         if (dispatch_table[i].code == choice) {
             handler_fn = dispatch_table[i].fn;
             break;
@@ -92,6 +97,11 @@ int compose_request(FILE *fp, request_t **req_ptr) {
     message_t *msg = handler_fn(fp);
 
     *req_ptr = create_request((RequestCode)choice, msg);
+    if (*req_ptr == NULL) {
+        fprintf(stderr, "%s(): failed to create request.\n", __func__);
+        return -1;
+    }
+
     return 1;
 }
 

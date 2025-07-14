@@ -8,7 +8,7 @@ typedef struct user user_t;    // not referencing user-internal.h to hide detail
 
 int register_user(char *username, char* passw, Privileges privileges);    // wrapper for create + add
 int remove_user(uint32_t uid);
-int find_users(const char *username, int limit, user_t **found);
+int find_users(const char *username, user_t ***found);
 user_t *authenticate(const char *username, const char* passw);
 char *user_to_string(const user_t *user);
 

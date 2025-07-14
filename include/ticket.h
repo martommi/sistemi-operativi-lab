@@ -34,19 +34,19 @@ typedef enum DateMatchMode {
     DATE_MATCH_RANGE
 } DateMatchMode;
 
-int open_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, /* Nullable */ user_t *support_agent);
+int open_ticket(char *title, char *desc, const char *date, TicketPriority priority, TicketStatus status, /* Nullable */ user_t *support_agent);
 int delete_ticket(uint32_t tid);
 int count_tickets();
 int assign_ticket(ticket_t *ticket, user_t *support_agent);
 int update_status(ticket_t *ticket, TicketStatus new_status);
 
-int get_all_tickets(ticket_t **destination);                           // wrapper for get_tickets with no filter (set as NULL)
-int get_tickets_by_priority(ticket_t **dest, TicketPriority priority);
-int get_tickets_by_status(ticket_t **dest, TicketStatus status);
-int get_tickets_by_support_agent(ticket_t **dest, user_t *support_agent);
-int get_tickets_by_title(ticket_t **dest, const char *query, TitleMatchMode mode);
-int get_tickets_by_date(ticket_t **dest, DateMatchMode mode, const char *arg1, const char *arg2);
-int get_ticket_by_tid(ticket_t **dest, uint32_t tid);
+int get_all_tickets(ticket_t ***destination);                           // wrapper for get_tickets with no filter (set as NULL)
+int get_tickets_by_priority(ticket_t ***dest, TicketPriority priority);
+int get_tickets_by_status(ticket_t ***dest, TicketStatus status);
+int get_tickets_by_support_agent(ticket_t ***dest, user_t *support_agent);
+int get_tickets_by_title(ticket_t ***dest, const char *query, TitleMatchMode mode);
+int get_tickets_by_date(ticket_t ***dest, DateMatchMode mode, const char *arg1, const char *arg2);
+int get_ticket_by_tid(ticket_t ***dest, uint32_t tid);
 char *ticket_to_string(const ticket_t *ticket);
 
 int save_tickets(const char *filename);

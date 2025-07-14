@@ -26,17 +26,17 @@ user_t *_create_user(char *username, char *passw, Privileges privileges) {
 
     user->username = strdup(username);
     if (!user->username) {
-        perror("strdup username");
+        perror("strdup()");
         free(user);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     user->password = strdup(passw);
     if (!user->password) {
-        perror("strdup password");
+        perror("strdup()");
         free(user->username);
         free(user);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     user->privileges = privileges;
@@ -46,6 +46,8 @@ user_t *_create_user(char *username, char *passw, Privileges privileges) {
 }
 
 void _free_user(user_t *user) {
+    if (user == NULL) return;
+
     free(user->username);
     free(user->password);
     free(user);
@@ -56,8 +58,8 @@ int _add_user(user_t *user) {
 
     while (curr) {
         if (curr->uid == user->uid) {
-            // fprintf(stderr, "%s(): user with UID %u already registered.\n", __func__, user->uid);
-            return 0;
+            fprintf(stderr, "%s(): user with UID %u already registered.\n", __func__, user->uid);
+            return -1;
         }
         
         curr = curr->next;
@@ -89,20 +91,29 @@ int _remove_user(uint32_t uid) {
     }
 
     fprintf(stderr, "%s(): trying to remove non-existing user.\n", __func__);
-    return 0;
+    return -1;
 }
 
-int _find_users(const char *username, int limit, user_t **found) { //TODO alloca
+int _find_users(const char *username, user_t ***found) {
     user_t *curr = head;
     int count = 0;
+    user_t **result = NULL;
 
-    while (curr && count < limit) {
+    while (curr) {
         if (strcmp(curr->username, username) == 0) {
-            found[count++] = curr;
+            user_t **tmp = realloc(result, (count + 1) * sizeof(user_t *));
+            if (!tmp) {
+                free(result);
+                *found = NULL;
+                return -1;
+            }
+            result = tmp;
+            result[count++] = curr;
         }
         curr = curr->next;
     }
 
+    *found = result;
     return count;
 }
 
@@ -129,7 +140,7 @@ int _count_users() {
 }
 
 const char *_privilege_to_string(Privileges p) {
-    switch (1 << (31 - __builtin_clz(p))) { // isola il bit (non zero) più significativo a sinistra, cioè il privilegio più alto
+    switch (1 << (31 - __builtin_clz(p))) {    // isola il bit (non zero) più significativo a sinistra, cioè il privilegio più alto
         case PRIVILEGES_ADMIN: return "Admin";
         case PRIVILEGES_SUPPORT_AGENT: return "Support Agent";
         case PRIVILEGES_GUEST: return "Guest";
@@ -138,6 +149,11 @@ const char *_privilege_to_string(Privileges p) {
 }
 
 char *_print_user(const user_t *u) {
+    if (u == NULL) {
+        fprintf(stderr, "%s(): trying to print null user.\n", __func__);
+        return NULL;
+    }
+
     size_t len = snprintf(NULL, 0, 
         "ID: %d\n Username: %s\n Privileges: %s\n",
         u->uid,
@@ -156,9 +172,9 @@ char *_print_user(const user_t *u) {
         u->uid,
         u->username,
         _privilege_to_string(u->privileges)
-    ) > len + 1) {
+    ) > len) {
 
-        fprintf(stderr, "%s() error: snprintf returned truncated result.", __func__);
+        fprintf(stderr, "%s() error: snprintf returned truncated result.\n", __func__);
         free(str);
         return NULL;
     }
@@ -167,18 +183,25 @@ char *_print_user(const user_t *u) {
 }
 
 int _serialize_user(int fd, const user_t *u) {
-    uint32_t uid_n = htonl(u->uid);
-    if (write_all(fd, &uid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+    if (u == NULL) {
+        fprintf(stderr, "%s(): null user.\n", __func__);
         return -1;
     }
 
-    if (!serialize_string(fd, u->username) ||
-        !serialize_string(fd, u->password)) {
+    uint32_t uid_n = htonl(u->uid);
+    if (write_all(fd, &uid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        fprintf(stderr, "%s(): write fail.\n", __func__);
+        return -1;
+    }
+
+    if (!serialize_string(fd, u->username) || !serialize_string(fd, u->password)) {
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         return -1;
     }
 
     uint32_t priv_n = htonl(u->privileges);
     if (write_all(fd, &priv_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         return -1;
     }
 
@@ -186,6 +209,11 @@ int _serialize_user(int fd, const user_t *u) {
 }
 
 user_t *_deserialize_user(int fd) {
+    if (fd < 0) {
+        fprintf(stderr, "%s(): invalid file descriptor.\n", __func__);
+        return NULL;
+    }
+
     user_t *user = malloc(sizeof(user_t));
     if (!user) {
         perror("malloc()");
@@ -194,7 +222,7 @@ user_t *_deserialize_user(int fd) {
 
     uint32_t uid_n;
     if (read_all(fd, &uid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("fread uid");
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(user);
         return NULL;
     }
@@ -204,14 +232,14 @@ user_t *_deserialize_user(int fd) {
 
     user->username = deserialize_string(fd);
     if (!user->username) {
-        fprintf(stderr, "Failed to deserialize username\n");
+        fprintf(stderr, "%s(): failed to deserialize username.\n", __func__);
         free(user);
         return NULL;
     }
 
     user->password = deserialize_string(fd);
     if (!user->password) {
-        fprintf(stderr, "Failed to deserialize password\n");
+        fprintf(stderr, "%s(): failed to deserialize password.\n", __func__);
         free(user->username);
         free(user);
         return NULL;
@@ -219,7 +247,7 @@ user_t *_deserialize_user(int fd) {
 
     uint32_t priv_n;
     if (read_all(fd, &priv_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        perror("fread privileges");
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(user->username);
         free(user->password);
         free(user);
@@ -242,13 +270,14 @@ int _save_users(const char *filename) {
 
     uint32_t count_n = htonl(_count_users());
     if (write_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         close(fd);
         return -1;
     }
 
     user_t *current = head;
     while (current) {
-        if (!_serialize_user(fd, current)) {
+        if (_serialize_user(fd, current) < 0) {
             close(fd);
             return -1;
         }
@@ -269,6 +298,7 @@ int _load_users(const char *filename) {
 
     uint32_t count_n;
     if (read_all(fd, &count_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         close(fd);
         return -1;
     }

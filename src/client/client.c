@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    printf("You are connected with the server.");
+    printf("You are now connected with server.\n");
 
     print_menu();
     
@@ -60,19 +60,35 @@ int main(int argc, char *argv[]) {
         printf("> ");
         fflush(stdout);
 
-        compose_request(stdin, &req);
-        send_request(sock, req);
-        free_request(req);
+        int retcode = compose_request(stdin, &req);
 
-        recv_response(sock, &resp);
+        if (retcode == 0) continue;   // Help menu was printed. No need to send a request.
+
+        if (retcode < 0) {
+            fprintf(stderr, "[CLIENT] failed to build request. Please try again or restart.\n");
+            continue;
+        }
+
+        if (send_request(sock, req) < 0) {
+            fprintf(stderr, "[CLIENT] something went wrong communicating with server.\n");
+            continue;
+        }
+
+        free_request(&req);
+
+        if (recv_response(sock, &resp) < 0) {
+            fprintf(stderr, "[CLIENT] server didn't respond or sent invalid response.\n");
+            continue;
+        }
+        
         print_response(stdout, resp);
         
         if (resp->code == RESP_EXIT) {
-            free_response(resp);
+            free_response(&resp);
             break;
         }
         
-        free_response(resp);
+        free_response(&resp);
     }
     
     close(sock);

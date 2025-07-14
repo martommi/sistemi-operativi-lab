@@ -3,5 +3,6 @@
 
 int serialize_string(int fd, const char *str);
 char *deserialize_string(int fd);
+void strip_newline(char *s);
 
 #endif
