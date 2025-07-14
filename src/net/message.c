@@ -117,7 +117,7 @@ int read_message(int fd, message_t **msg_out) {
         uint32_t net_len;
         if (read_all(fd, &net_len, sizeof(uint32_t)) != sizeof(uint32_t)) {
             perror("read()");
-            free_message(msg);
+            free_message(&msg);
             return -1;
         }
 
@@ -126,13 +126,13 @@ int read_message(int fd, message_t **msg_out) {
         msg->content[i] = malloc(len);
         if (!msg->content[i]) {
             perror("malloc()");
-            free_message(msg);
+            free_message(&msg);
             return -1;
         }
 
         if (read_all(fd, msg->content[i], len) != len) {
             perror("read()");
-            free_message(msg);
+            free_message(&msg);
             return -1;
         }
     }
