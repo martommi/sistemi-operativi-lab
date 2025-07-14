@@ -26,10 +26,10 @@ response_t *create_response(ResponseCode code, message_t *message) {
     return resp;
 }
 
-void free_response(response_t *response) {
+void free_response(response_t **response) {
     if (response == NULL) return;
-    free_message(&response->payload);
-    free(response);
+    free_message(&(*response)->payload);
+    free(*response);
 }
 
 int print_response(FILE *f, response_t *resp) {

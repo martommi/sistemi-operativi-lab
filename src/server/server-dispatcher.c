@@ -74,7 +74,7 @@ int handle_request(session_t *session, request_t *req) {
     }
 
     int keep_session_alive = (resp->code == RESP_EXIT);
-    free_response(resp);
+    free_response(&resp);
     return keep_session_alive;
 }
 

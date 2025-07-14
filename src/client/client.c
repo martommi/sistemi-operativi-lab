@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        free_request(req);
+        free_request(&req);
 
         if (recv_response(sock, &resp) < 0) {
             fprintf(stderr, "[CLIENT] server didn't respond or sent invalid response.");
@@ -80,11 +80,11 @@ int main(int argc, char *argv[]) {
         print_response(stdout, resp);
         
         if (resp->code == RESP_EXIT) {
-            free_response(resp);
+            free_response(&resp);
             break;
         }
         
-        free_response(resp);
+        free_response(&resp);
     }
     
     close(sock);

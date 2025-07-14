@@ -39,6 +39,6 @@ typedef struct request {
 } request_t;
 
 request_t *create_request(RequestCode code, message_t *msg);
-void free_request(request_t *req);
+void free_request(request_t **req);
 
 #endif /* REQUEST_H */

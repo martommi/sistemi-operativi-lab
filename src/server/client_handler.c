@@ -34,11 +34,11 @@ int main(int argc, char* argv[]) {
         }
 
         if (handle_request(session, req) <= 0) {    /* if it receives an exit code, ends session */
-            free_request(req);
+            free_request(&req);
             break;
         }
 
-        free_request(req);
+        free_request(&req);
     }
     
     end_session(&session);
