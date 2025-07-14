@@ -32,12 +32,12 @@ $(CLIENT_HANDLER_TARGET): $(CLIENT_HANDLER_OBJ)
 
 install:
 	mkdir -p obj bin/internal etc data
-	find . -name '*.o' -exec mv {} obj/ \;
+	find src/ -name '*.o' -exec mv {} obj/ \;
 	mv client server bin/
 	mv client_handler bin/internal/
 
 clean:
-	rm -f client server
+	rm -f bin/client server
 	rm -f bin/internal/client_handler
 	rm -f *.o
 	rm -f obj/*.o
@@ -45,5 +45,5 @@ clean:
 setup: install
 	@echo "[SETUP] Loading test users..."
 	@mkdir -p etc
-	@echo -e "admin:admin123\nagent:agent123" > etc/users-config.dat
+	@printf "admin:admin123\nagent:agent123" > etc/users-config.dat
 	@chmod 600 etc/users-config.dat

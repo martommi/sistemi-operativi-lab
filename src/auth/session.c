@@ -43,9 +43,9 @@ void end_session(session_t **session_ptr) {
 }
 
 user_t *login(session_t *session, char *username, char *passw) {
-    user_t *authenticated;
+    user_t *authenticated = NULL;
     if ((authenticated = authenticate(username, passw)) == NULL) {
-        fprintf(stderr, "%s(): wrong credentials.", __func__);
+        fprintf(stderr, "%s(): wrong credentials.\n", __func__);
         return NULL;
     }
 
@@ -58,7 +58,7 @@ user_t *login(session_t *session, char *username, char *passw) {
 
 void logout(session_t *session) {
     if (!session) {
-        fprintf(stderr, "%s(): null session.", __func__);
+        fprintf(stderr, "%s(): null session.\n", __func__);
         return;
     }
 
@@ -72,5 +72,5 @@ int is_logged_in(session_t *session) {
 }
 
 int session_has_privileges(session_t *session, Privileges privileges) {
-    return (session->privileges & privileges) == privileges;
+    return (session->privileges & privileges) != 0;
 }

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
+#include "ticket.h"
 #include "../../include/privileges.h"
 
 typedef struct user {
@@ -18,11 +20,13 @@ void _free_user(user_t *user);
 
 int _add_user(user_t *user);
 int _remove_user(uint32_t uid);
-int _find_users(const char *username, int limit, user_t **found);
+int _find_users(const char *username, user_t ***found);
 user_t *_authenticate(const char *username, const char *passw);
 int _count_users();
 const char *_privilege_to_string(Privileges p);
 char *_print_user(const user_t *user);
+char *_print_status(TicketStatus s);
+char *_print_priority(TicketPriority p);
 
 int _serialize_user(int fd, const user_t *u);
 user_t *_deserialize_user(int fd);

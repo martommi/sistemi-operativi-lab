@@ -60,20 +60,24 @@ int main(int argc, char *argv[]) {
         printf("> ");
         fflush(stdout);
 
-        if (compose_request(stdin, &req) < 0) {
-            fprintf(stderr, "[CLIENT] failed to build request. Please try again or restart.");
+        int retcode = compose_request(stdin, &req);
+
+        if (retcode == 0) continue;   // Help menu was printed. No need to send a request.
+
+        if (retcode < 0) {
+            fprintf(stderr, "[CLIENT] failed to build request. Please try again or restart.\n");
             continue;
         }
 
         if (send_request(sock, req) < 0) {
-            fprintf(stderr, "[CLIENT] something went wrong communicating with server.");
+            fprintf(stderr, "[CLIENT] something went wrong communicating with server.\n");
             continue;
         }
 
         free_request(&req);
 
         if (recv_response(sock, &resp) < 0) {
-            fprintf(stderr, "[CLIENT] server didn't respond or sent invalid response.");
+            fprintf(stderr, "[CLIENT] server didn't respond or sent invalid response.\n");
             continue;
         }
         

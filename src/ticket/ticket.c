@@ -5,13 +5,14 @@
 
 #include "../../include/ticket.h"
 #include "ticket-internal.h"
+#include "auth/user-internal.h"
 
-int open_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
+int open_ticket(char *title, char *desc, const char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
     ticket_t *ticket = _create_ticket(title, desc, date, priority, status, support_agent);
 
     if (_add_ticket(ticket)) return 1;
 
-    fprintf(stderr, "%s(): failed adding new ticket (already exists?)", __func__);
+    fprintf(stderr, "%s(): failed adding new ticket (already exists?)\n", __func__);
     _free_ticket(ticket);
     return 0;
 }
@@ -32,31 +33,31 @@ int update_status(ticket_t *ticket, TicketStatus new_status) {
     return _set_status(ticket, new_status);
 }
 
-int get_all_tickets(ticket_t **destination) {
+int get_all_tickets(ticket_t ***destination) {
     return _get_tickets(destination, NULL);
 }
 
-int get_tickets_by_priority(ticket_t **dest, TicketPriority priority) {
+int get_tickets_by_priority(ticket_t ***dest, TicketPriority priority) {
     return _get_tickets(dest, get_by_priority, priority);
 }
 
-int get_tickets_by_status(ticket_t **dest, TicketStatus status) {
+int get_tickets_by_status(ticket_t ***dest, TicketStatus status) {
     return _get_tickets(dest, get_by_status, status);
 }
 
-int get_tickets_by_support_agent(ticket_t **dest, user_t *support_agent) {
-    return _get_tickets(dest, get_by_support_agent, support_agent);
+int get_tickets_by_support_agent(ticket_t ***dest, user_t *support_agent) {
+    return _get_tickets(dest, get_by_support_agent, support_agent->username);
 }
 
-int get_tickets_by_title(ticket_t **dest, const char *query, TitleMatchMode mode) {
+int get_tickets_by_title(ticket_t ***dest, const char *query, TitleMatchMode mode) {
     return _get_tickets(dest, get_by_title, query, mode);
 }
 
-int get_tickets_by_date(ticket_t **dest, DateMatchMode mode, const char *arg1, const char *arg2) {
+int get_tickets_by_date(ticket_t ***dest, DateMatchMode mode, const char *arg1, const char *arg2) {
     return _get_tickets(dest, get_by_date, arg1, arg2);
 }
 
-int get_ticket_by_tid(ticket_t **dest, uint32_t tid) {
+int get_ticket_by_tid(ticket_t ***dest, uint32_t tid) {
     return _get_tickets(dest, get_by_tid, tid);
 }
 

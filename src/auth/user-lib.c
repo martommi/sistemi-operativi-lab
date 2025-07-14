@@ -24,13 +24,13 @@ int remove_user(uint32_t uid) {
     return _remove_user(uid);
 }
 
-int find_users(const char *username, int limit, user_t **found) {
-    if (!username || limit < 1 || !found) {
+int find_users(const char *username, user_t ***found) {
+    if (!username || !found) {
         fprintf(stderr, "%s(): invalid arguments\n", __func__);
         return -1;
     }
 
-    return _find_users(username, limit, found);
+    return _find_users(username, found);
 }
 
 user_t *authenticate(const char *username, const char *passw) {

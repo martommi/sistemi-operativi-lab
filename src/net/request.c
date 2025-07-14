@@ -16,7 +16,9 @@ request_t *create_request(RequestCode code, message_t *msg) {
 }
 
 void free_request(request_t **req) {
-    if (*req == NULL) return;
+    if (req == NULL || *req == NULL) return;
+
     free_message(&(*req)->payload);
     free(*req);
+    *req = NULL;
 }

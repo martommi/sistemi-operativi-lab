@@ -60,3 +60,7 @@ char *deserialize_string(int fd) {
     str[len] = '\0';
     return str;
 }
+
+void strip_newline(char *s) {
+    s[strcspn(s, "\n")] = '\0';
+}

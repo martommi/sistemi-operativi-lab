@@ -1,7 +1,7 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 
 #include "../../include/session.h"
 #include "../../include/privileges.h"
@@ -15,8 +15,16 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int client_sock = atoi(argv[1]); /* Retrieve socket descriptor */
+    /* Retrieve socket descriptor. */
+    char *endptr;
+    errno = 0;
+    long result = strtol(argv[1], &endptr, 10);
+    if (errno != 0 || *endptr != '\0' || result < 0) {
+        fprintf(stderr, "Invalid value for <socket_fd>\n");
+        exit(EXIT_FAILURE);
+    }
 
+    int client_sock = (int)result;
     if (client_sock < 0) {
         fprintf(stderr, "Invalid socket file descriptor.\n");
         exit(EXIT_FAILURE);
@@ -26,11 +34,15 @@ int main(int argc, char* argv[]) {
 
     init_test_users();
 
+    request_t *req;
     while (1) {
-        request_t *req = NULL;
+        req = NULL;
         if (recv_request(client_sock, &req) < 0) {
             fprintf(stderr, "%s(): failed to receive request.\n", __func__);
-            continue;
+
+            if (fcntl(client_sock, F_GETFD) != -1 || errno != EBADF)
+                continue;  // error but socket is still open -> keep reading
+            break; // closed socket -> exit
         }
 
         if (handle_request(session, req) <= 0) {    /* if it receives an exit code, ends session */

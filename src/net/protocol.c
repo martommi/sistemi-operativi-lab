@@ -9,18 +9,18 @@
 
 int send_request(int fd, request_t *req) {
     if (req == NULL) {
-        fprintf(stderr, "%s(): NULL request.", __func__);
+        fprintf(stderr, "%s(): NULL request.\n", __func__);
         return -1;
     }
 
     int code = htonl((int)req->code);
     if (write_all(fd, &code, sizeof(int)) != sizeof(int)) {
-        fprintf(stderr, "%s(): write error.", __func__);
+        fprintf(stderr, "%s(): write error.\n", __func__);
         return -1;
     }
 
     if (write_message(fd, req->payload) < 0) {
-        fprintf(stderr, "%s(): write error.", __func__);
+        fprintf(stderr, "%s(): write error.\n", __func__);
         return -1;
     }
 
@@ -36,7 +36,7 @@ int recv_request(int fd, request_t **req_out) {
 
     int code_net;
     if (read_all(fd, &code_net, sizeof(int)) != sizeof(int)) {
-        fprintf(stderr, "%s(): read failed.", __func__);
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(req);
         return -1;
     }
@@ -44,7 +44,7 @@ int recv_request(int fd, request_t **req_out) {
     req->code = (RequestCode)ntohl(code_net);
     
     if (read_message(fd, &req->payload) < 0) {
-        fprintf(stderr, "%s(): read failed.", __func__);
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(req);
         return -1;
     }
@@ -55,18 +55,18 @@ int recv_request(int fd, request_t **req_out) {
 
 int send_response(int fd, response_t *resp) { 
     if (resp == NULL) {
-        fprintf(stderr, "%s(): trying to send a null response.", __func__);
+        fprintf(stderr, "%s(): trying to send a null response.\n", __func__);
         return -1;
     }
 
     int code = htonl((int)resp->code);
     if (write_all(fd, &code, sizeof(int)) != sizeof(int)) {
-        fprintf(stderr, "%s(): write failed.", __func__);
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         return -1;
     }
 
     if (write_message(fd, resp->payload) < 0) {
-        fprintf(stderr, "%s(): write message failed.", __func__);
+        fprintf(stderr, "%s(): write message failed.\n", __func__);
         return -1;
     }
 
@@ -82,7 +82,7 @@ int recv_response(int fd, response_t **resp_out) {
 
     int code_net;
     if (read_all(fd, &code_net, sizeof(int)) != sizeof(int)) {
-        fprintf(stderr, "%s(): read failed.", __func__);
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(resp);
         return -1;
     }
@@ -90,7 +90,7 @@ int recv_response(int fd, response_t **resp_out) {
     resp->code = (ResponseCode)ntohl(code_net);
     
     if (read_message(fd, &resp->payload) < 0) {
-        fprintf(stderr, "%s(): read failed.", __func__);
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(resp);
         return -1;
     }

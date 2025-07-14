@@ -1,3 +1,6 @@
+#ifndef TICKET_INTERNAL_H
+#define TICKET_INTERNAL_H
+
 #include <stdint.h>
 #include <stdarg.h>
 #include "../../include/ticket.h"
@@ -15,10 +18,10 @@ typedef struct ticket {
 
 typedef int (*ticket_filter)(const ticket_t *target, va_list args);
 
-ticket_t *_create_ticket(char *title, char *desc, char *date, TicketPriority priority, TicketStatus status, user_t *support_agent);
+ticket_t *_create_ticket(char *title, char *desc, const char *date, TicketPriority priority, TicketStatus status, user_t *support_agent);
 void _free_ticket(ticket_t *target);
 
-int _get_tickets(ticket_t **destination, ticket_filter filter, ...);
+int _get_tickets(ticket_t ***destination, ticket_filter filter, ...);
 int get_by_priority(const ticket_t *target, va_list args);
 int get_by_status(const ticket_t *target, va_list args);
 int get_by_support_agent(const ticket_t *target, va_list args);
@@ -37,3 +40,5 @@ int _serialize_ticket(int fd, const ticket_t *t);
 ticket_t *_deserialize_ticket(int fd);
 int _save_tickets(const char *filename);
 int _load_tickets(const char *filename);
+
+#endif

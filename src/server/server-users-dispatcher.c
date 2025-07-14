@@ -3,85 +3,83 @@
 
 #include "../../include/server-users-dispatcher.h"
 #include "../../include/user-lib.h"
-#include "../auth/user-internal.h"
 #include "../../include/privileges.h"
 
 response_t *handle_login(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));;
     }
 
     if (msg->size < 2) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
     return login(session, msg->content[0], msg->content[1]) != NULL
-        ? create_response(RESP_OK, create_message_from_str("[LOGIN] Login successful."))
-        : create_response(RESP_ERROR, create_message_from_str("[LOGIN] Invalid credentials."));
+        ? create_response(RESP_OK, create_message_from_str("[LOGIN] Login successful.\n"))
+        : create_response(RESP_ERROR, create_message_from_str("[LOGIN] Invalid credentials.\n"));
 }
 
 response_t *handle_logout(session_t *session, message_t *msg) {
     if (session == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));;
     }
 
-    if (!is_logged_in(session)) return create_response(RESP_ERROR, create_message_from_str("[LOGOUT] No user is currently logged in."));
+    if (!is_logged_in(session)) return create_response(RESP_ERROR, create_message_from_str("[LOGOUT] No user is currently logged in.\n"));
     logout(session);
-    return create_response(RESP_OK, create_message_from_str("[LOGOUT] Logged out."));
+    return create_response(RESP_OK, create_message_from_str("[LOGOUT] Logged out.\n"));
 }
 
 response_t *handle_register_user(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));;
     }
 
     if (msg->size < 2) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
     return register_user(msg->content[0], msg->content[1], session->privileges)
-        ? create_response(RESP_OK, create_message_from_str("[REGISTRATION] User registered successfully."))
-        : create_response(RESP_ERROR, create_message_from_str("[REGISTRATION] User registration failed (already present?)."));
+        ? create_response(RESP_OK, create_message_from_str("[REGISTRATION] User registered successfully.\n"))
+        : create_response(RESP_ERROR, create_message_from_str("[REGISTRATION] User registration failed (already present?).\n"));
 }
 
 response_t *handle_remove_user(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));;
     }
 
     if (!session_has_privileges(session, PRIVILEGES_ADMIN)) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing privileges: ADMIN."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing privileges: ADMIN.\n"));
     }
 
     if (msg->size < 1) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
     return remove_user(atoi(msg->content[0]))
-        ? create_response(RESP_OK, create_message_from_str("[USER] User removed."))
-        : create_response(RESP_ERROR, create_message_from_str("[USER] User removal failed (non-existing?)."));
+        ? create_response(RESP_OK, create_message_from_str("[USER] User removed.\n"))
+        : create_response(RESP_ERROR, create_message_from_str("[USER] User removal failed (non-existing?).\n"));
 }
 
 response_t *handle_find_users(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));
     }
 
     if (msg->size < 1) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
-    int limit = _count_users();
-    user_t **users = malloc(sizeof(user_t *) * limit);
-    int count = find_users(msg->content[0], limit, users);
+    user_t **users;
+    int count = find_users(msg->content[0], &users);
     if (count <= 0) {
         free(users);
-        return create_response(RESP_ERROR, create_message_from_str("[USER] Not found any users."));
+        return create_response(RESP_ERROR, create_message_from_str("[USER] Not found any users.\n"));
     }
 
     char **content = malloc(sizeof(char *) * count);
@@ -90,8 +88,6 @@ response_t *handle_find_users(session_t *session, message_t *msg) {
     }
 
     message_t *out = create_message(count, content);
-    for (int i = 0; i < count; i++) free(content[i]);
-    free(content);
     free(users);
 
     return create_response(RESP_OK, out);
@@ -100,37 +96,37 @@ response_t *handle_find_users(session_t *session, message_t *msg) {
 response_t *handle_save_users(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));;
     }
 
     if (!is_logged_in(session)) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] You must be logged in to perform this operation."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] You must be logged in to perform this operation.\n"));
     }
 
     if (msg->size < 1) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
     return save_users(msg->content[0])
-        ? create_response(RESP_OK, create_message_from_str("[SAVE] Users saved on file."))
-        : create_response(RESP_ERROR, create_message_from_str("[SAVE] Failed to save."));
+        ? create_response(RESP_OK, create_message_from_str("[SAVE] Users saved on file.\n"))
+        : create_response(RESP_ERROR, create_message_from_str("[SAVE] Failed to save.\n"));
 }
 
 response_t *handle_load_users(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));;
     }
     
     if (!session_has_privileges(session, PRIVILEGES_ADMIN | PRIVILEGES_SUPPORT_AGENT)) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT"));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT\n"));
     }
 
     if (msg->size < 1) {
-        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args."));
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
     return load_users(msg->content[0])
-        ? create_response(RESP_OK, create_message_from_str("[LOAD] Users loaded from file."))
-        : create_response(RESP_ERROR, create_message_from_str("[LOAD] Couldn't load users."));
+        ? create_response(RESP_OK, create_message_from_str("[LOAD] Users loaded from file.\n"))
+        : create_response(RESP_ERROR, create_message_from_str("[LOAD] Couldn't load users.\n"));
 }

@@ -73,7 +73,7 @@ int handle_request(session_t *session, request_t *req) {
         return -1;
     }
 
-    int keep_session_alive = (resp->code == RESP_EXIT);
+    int keep_session_alive = !(resp->code == RESP_EXIT);
     free_response(&resp);
     return keep_session_alive;
 }
@@ -88,62 +88,20 @@ response_t *handle_quit(session_t *session, message_t *msg) {
     char user_path[256];
     char ticket_path[256];
 
-    snprintf(user_path, sizeof(user_path), "%s_%s", DEFAULT_USERS_PATH, code);
-    snprintf(ticket_path, sizeof(ticket_path), "%s_%s", DEFAULT_TICKETS_PATH, code);
+    snprintf(user_path, sizeof(user_path), "users:%s_%s.dat", DEFAULT_USERS_PATH, code);
+    snprintf(ticket_path, sizeof(ticket_path), "tickets:%s_%s.dat", DEFAULT_TICKETS_PATH, code);
 
     if (save_users(user_path) < 0 || save_tickets(ticket_path) < 0) {
         fprintf(stderr, "%s(): failed to save on file.\n", __func__);
-        return NULL;
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Error saving on file tickets and users (wrong path?).\n"));
     }
 
     free_message(&msg);
 
-    return create_response(RESP_EXIT, create_message_from_str("[SERVER] Users and tickets saved. You will now be disconnected."));
+    return create_response(RESP_EXIT, create_message_from_str("[SERVER] Users and tickets saved. You will now be disconnected.\n"));
 }
 
 void init_test_users(void) {
-    const char *filename = "../../etc/users-config.dat";
-    int fd = open(filename, O_RDONLY);
-    if (fd == -1) return;
-
-    struct stat st;
-    if (fstat(fd, &st) == -1 || st.st_size == 0) {
-        close(fd);
-        return;
-    }
-
-    char *buffer = malloc(st.st_size + 1);
-    if (!buffer) {
-        close(fd);
-        return;
-    }
-
-    if (read(fd, buffer, st.st_size) != st.st_size) {
-        free(buffer);
-        close(fd);
-        return;
-    }
-
-    buffer[st.st_size] = '\0';
-    close(fd);
-
-    char *line = strtok(buffer, "\n");
-    while (line) {
-        char *sep = strchr(line, ':');
-        if (sep) {
-            *sep = '\0';
-            char *username = line;
-            char *password = sep + 1;
-            int privileges;
-
-            if (strcmp(username, "admin") == 0) privileges = PRIVILEGES_ADMIN;
-            else if (strcmp(username, "agent") == 0) privileges = PRIVILEGES_SUPPORT_AGENT;
-            else return;
-
-            register_user(username, password, privileges);
-        }
-        line = strtok(NULL, "\n");
-    }
-
-    free(buffer);
+    register_user("admin", "admin123", PRIVILEGES_ADMIN);
+    register_user("agent", "agent123", PRIVILEGES_SUPPORT_AGENT);
 }

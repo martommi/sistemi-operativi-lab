@@ -1,7 +1,6 @@
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -11,7 +10,7 @@
 
 message_t *create_message(uint32_t size, char **content) {
     if (content == NULL) {
-        fprintf(stderr, "%s(): trying to create message with NULL content.", __func__);
+        fprintf(stderr, "%s(): trying to create message with NULL content.\n", __func__);
         return NULL;
     }
 
@@ -29,7 +28,7 @@ message_t *create_message(uint32_t size, char **content) {
 
 message_t *create_message_from_str(const char *str) {
     if (str == NULL) {
-        fprintf(stderr, "%s(): trying to create message with NULL content.", __func__);
+        fprintf(stderr, "%s(): trying to create message with NULL content.\n", __func__);
         return NULL;
     }
 
@@ -52,24 +51,35 @@ message_t *create_message_from_str(const char *str) {
 void free_message(message_t **message) {
     if (message == NULL || *message == NULL) return;
 
-    for (uint32_t i = 0; i < (*message)->size; i++) {
-        free((*message)->content[i]);
+    message_t *msg = *message;
+
+    if (msg->content != NULL) {
+        for (uint32_t i = 0; i < msg->size; i++) {
+            char *tmp = msg->content[i];
+            free(tmp);
+            msg->content[i] = NULL;
+        }
+        free(msg->content);
+        msg->content = NULL;
     }
 
-    free((*message)->content);
-    free(*message);
+    free(msg);
     *message = NULL;
 }
 
 int write_message(int fd, message_t *message) {
     if (message == NULL) {
-        fprintf(stderr, "%s(): message is null.", __func__);
-        return -1;
+        uint32_t zero = 0;
+        if (write_all(fd, &zero, sizeof(uint32_t)) != sizeof(uint32_t)) {
+            fprintf(stderr, "%s(): write failed.\n", __func__);
+            return -1;
+        }
+        return 1;
     }
     
     uint32_t net_size = htonl(message->size);
     if (write_all(fd, &net_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        fprintf(stderr, "%s(): write failed.", __func__);
+        fprintf(stderr, "%s(): write failed.\n", __func__);
         return -1;
     }
 
@@ -78,12 +88,12 @@ int write_message(int fd, message_t *message) {
         uint32_t net_len = htonl(len);
 
         if (write_all(fd, &net_len, sizeof(uint32_t)) != sizeof(uint32_t)) {
-            fprintf(stderr, "%s(): write failed.", __func__);
+            fprintf(stderr, "%s(): write failed.\n", __func__);
             return -1;
         }
 
         if (write_all(fd, message->content[i], len) != len) {
-            fprintf(stderr, "%s(): write failed.", __func__);
+            fprintf(stderr, "%s(): write failed.\n", __func__);
             return -1;
         }
     }
@@ -94,8 +104,14 @@ int write_message(int fd, message_t *message) {
 int read_message(int fd, message_t **msg_out) {
     uint32_t net_size;
     if (read_all(fd, &net_size, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        fprintf(stderr, "%s(): read failed.", __func__);
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         return -1;
+    }
+
+    uint32_t size = ntohl(net_size);
+    if (size == 0) {
+        *msg_out = NULL;
+        return 1;
     }
 
     message_t *msg = calloc(1, sizeof(message_t));
@@ -104,7 +120,7 @@ int read_message(int fd, message_t **msg_out) {
         return -1;
     }
 
-    msg->size = ntohl(net_size);
+    msg->size = size;
 
     msg->content = calloc(msg->size, sizeof(char *));
     if (!msg->content) {

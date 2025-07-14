@@ -94,17 +94,26 @@ int _remove_user(uint32_t uid) {
     return -1;
 }
 
-int _find_users(const char *username, int limit, user_t **found) { //TODO alloca dentro alla funzione
+int _find_users(const char *username, user_t ***found) {
     user_t *curr = head;
     int count = 0;
+    user_t **result = NULL;
 
-    while (curr && count < limit) {
+    while (curr) {
         if (strcmp(curr->username, username) == 0) {
-            found[count++] = curr;
+            user_t **tmp = realloc(result, (count + 1) * sizeof(user_t *));
+            if (!tmp) {
+                free(result);
+                *found = NULL;
+                return -1;
+            }
+            result = tmp;
+            result[count++] = curr;
         }
         curr = curr->next;
     }
 
+    *found = result;
     return count;
 }
 
@@ -213,7 +222,7 @@ user_t *_deserialize_user(int fd) {
 
     uint32_t uid_n;
     if (read_all(fd, &uid_n, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        fprintf(stderr, "%s(): read failed.", __func__);
+        fprintf(stderr, "%s(): read failed.\n", __func__);
         free(user);
         return NULL;
     }
@@ -268,7 +277,7 @@ int _save_users(const char *filename) {
 
     user_t *current = head;
     while (current) {
-        if (!_serialize_user(fd, current)) {
+        if (_serialize_user(fd, current) < 0) {
             close(fd);
             return -1;
         }

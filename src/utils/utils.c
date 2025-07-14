@@ -23,6 +23,8 @@ int is_leap_year(int year) {
 }
 
 int is_valid_date_format(const char *date) {
+    if (strlen(date) == 0) return 1;
+
     if (strlen(date) != 10)
         return 0;
 

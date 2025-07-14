@@ -17,7 +17,7 @@ response_t *create_response(ResponseCode code, message_t *message) {
     resp->code = code;
 
     if (message == NULL) {
-        fprintf(stderr, "%s(): cannot assign a null message.", __func__);
+        fprintf(stderr, "%s(): cannot assign a null message.\n", __func__);
         free(resp);
         return NULL;
     }
@@ -27,14 +27,16 @@ response_t *create_response(ResponseCode code, message_t *message) {
 }
 
 void free_response(response_t **response) {
-    if (response == NULL) return;
+    if (response == NULL || *response == NULL) return;
+
     free_message(&(*response)->payload);
     free(*response);
+    *response = NULL;
 }
 
 int print_response(FILE *f, response_t *resp) {
     if (!f || !resp || !resp->payload || !resp->payload->content) {
-        fprintf(stderr, "%s(): trying to print null response or with null args.", __func__);
+        fprintf(stderr, "%s(): trying to print null response or with null args.\n", __func__);
         return -1;
     }
 
@@ -42,7 +44,7 @@ int print_response(FILE *f, response_t *resp) {
         const char *line = resp->payload->content[i];
         if (line) {
             if (write_all(fileno(f), line, strlen(line)) != strlen(line)) {
-                fprintf(stderr, "%s(): write failed.", __func__);
+                fprintf(stderr, "%s(): write failed.\n", __func__);
                 return -1;
             }
         }
