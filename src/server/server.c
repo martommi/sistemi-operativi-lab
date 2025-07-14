@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -49,6 +50,7 @@ int main(int argc, char *argv[]) {
 
     printf("Server now listening on port: %d\n", port);
 
+    signal(SIGCHLD, SIG_IGN);    /* No need to wait for forked children, kill them at termination. */
     while (1) {    /* Server loop */
         if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_len)) == -1) {
             perror("accept()");

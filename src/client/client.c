@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
         if (retcode < 0) {
             fprintf(stderr, "[CLIENT] failed to build request. Please try again or restart.\n");
-            continue;
+            break;
         }
 
         if (send_request(sock, req) < 0) {

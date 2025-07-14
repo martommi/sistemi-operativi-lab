@@ -37,17 +37,18 @@ install:
 	mv client_handler bin/internal/
 
 clean:
-	rm -f bin/client server
-	rm -f bin/internal/client_handler
-	rm -f *.o
-	rm -f obj/*.o
+	rm -f bin/client bin/server bin/internal/client_handler
+	find . -type f -name '*.o' -exec rm -f {} +
+	rm -f log/setup.log
 
 setup:
 	@mkdir -p log
 	@echo "[SETUP] Cleaning previous build..."
-	@$(MAKE) clean > log/setup.log 2>&1
+	@$(MAKE) clean > log/setup.log 2>&1 || { echo "[ERROR] clean failed. Check log/setup.log"; tail -n 10 log/setup.log; exit 1; }
 	@echo "[SETUP] Compiling all targets..."
-	@$(MAKE) all >> log/setup.log 2>&1
+	@$(MAKE) all >> log/setup.log 2>&1 || { echo "[ERROR] build failed. Check log/setup.log"; tail -n 10 log/setup.log; exit 1; }
 	@echo "[SETUP] Installing binaries and directories..."
-	@$(MAKE) install >> log/setup.log 2>&1
+	@$(MAKE) install >> log/setup.log 2>&1 || { echo "[ERROR] install failed. Check log/setup.log"; tail -n 10 log/setup.log; exit 1; }
 	@echo "[SETUP] Loading test users..."
+	@echo "[SETUP] Done. Full log in log/setup.log"
+	@echo "You can now run with ./bin/server <port> and ./bin/client <ip> <port>"

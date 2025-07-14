@@ -17,8 +17,8 @@
 #include "../../include/ticket.h"
 #include "../../include/utils.h"
 
-#define DEFAULT_USERS_PATH "../../data/users/"
-#define DEFAULT_TICKETS_PATH "../../data/tickets/"
+#define DEFAULT_USERS_PATH "data/users/"
+#define DEFAULT_TICKETS_PATH "data/tickets/"
 #define DISPATCH_TABLE_SIZE (sizeof(dispatch_table) / sizeof(dispatcher_t))
 
 static dispatcher_t dispatch_table[] = {
@@ -88,8 +88,8 @@ response_t *handle_quit(session_t *session, message_t *msg) {
     char user_path[256];
     char ticket_path[256];
 
-    snprintf(user_path, sizeof(user_path), "users:%s_%s.dat", DEFAULT_USERS_PATH, code);
-    snprintf(ticket_path, sizeof(ticket_path), "tickets:%s_%s.dat", DEFAULT_TICKETS_PATH, code);
+    snprintf(user_path, sizeof(user_path), "%susers_%s.dat", DEFAULT_USERS_PATH, code);
+    snprintf(ticket_path, sizeof(ticket_path), "%stickets_%s.dat", DEFAULT_TICKETS_PATH, code);
 
     if (save_users(user_path) < 0 || save_tickets(ticket_path) < 0) {
         fprintf(stderr, "%s(): failed to save on file.\n", __func__);

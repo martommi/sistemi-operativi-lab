@@ -1,6 +1,4 @@
 #include "../../include/server-tickets-dispatcher.h"
-
-#include "utils.h"
 #include "../../include/ticket.h"
 #include "../../include/user-lib.h"
 

@@ -98,13 +98,13 @@ message_t *input_ticket_filter_support_agent(FILE *fp) {
 }
 
 message_t *input_ticket_filter_title(FILE *fp) {
-    char *title = prompt_string(fp, "> ticket title: ");
-    printf("Tile matching mode: \n\
-        1- Exact Match\n\
-        2- Contains\n\
-        3- Starts With\n\
-        \n");
+    printf("Tile matching mode:\n"
+        "  1 - Exact Match\n"
+        "  2 - Contains\n"
+        "  3 - Starts With\n");
+
     char *mode = prompt_validated_input(fp, "> mode: ", is_number, "[TICKET] Invalid input. Must be a number.\n");
+    char *title = prompt_string(fp, "> ticket title: ");
     if (!title || !mode) return NULL;
     char **content = malloc(2 * sizeof(char *));
     if (!content) return NULL;

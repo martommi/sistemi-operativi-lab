@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,6 +9,22 @@
 #include "../../include/protocol.h"
 #include "../../include/request.h"
 #include "../../include/server-dispatcher.h"
+
+static session_t *session = NULL;
+
+void handle_signal(int sig);
+
+void handle_signal(int sig) {
+    fprintf(stderr, "\nCaught signal %d, shutting down...\n", sig);
+
+    handle_quit(session, NULL);
+
+    if (session) {
+        end_session(&session);
+    }
+    
+    exit(EXIT_SUCCESS);
+}
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -30,19 +47,19 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    session_t *session = create_session(client_sock, NULL, 0, PRIVILEGES_GUEST);
+    /* Handling signals */
+    signal(SIGINT, handle_signal);    // saves the state if interrupted.
 
-    init_test_users();
+    session = create_session(client_sock, NULL, 0, PRIVILEGES_GUEST);
+
+    init_test_users();    // for testing
 
     request_t *req;
     while (1) {
         req = NULL;
         if (recv_request(client_sock, &req) < 0) {
             fprintf(stderr, "%s(): failed to receive request.\n", __func__);
-
-            if (fcntl(client_sock, F_GETFD) != -1 || errno != EBADF)
-                continue;  // error but socket is still open -> keep reading
-            break; // closed socket -> exit
+            break;
         }
 
         if (handle_request(session, req) <= 0) {    /* if it receives an exit code, ends session */
@@ -53,5 +70,6 @@ int main(int argc, char* argv[]) {
         free_request(&req);
     }
     
-    end_session(&session);
+    end_session(&session);   // closes the socket
+    return EXIT_SUCCESS;
 }

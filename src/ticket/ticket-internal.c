@@ -292,8 +292,17 @@ int _serialize_ticket(int fd, const ticket_t *t) {
         return -1;
     }
 
-    if (_serialize_user(fd, t->support_agent) == -1) {
+    uint8_t has_agent = (t->support_agent != NULL) ? 1 : 0;
+    if (write_all(fd, &has_agent, sizeof(uint8_t)) != sizeof(uint8_t)) {
+        fprintf(stderr, "%s(): write failed (agent flag).\n", __func__);
         return -1;
+    }
+
+    if (has_agent) {
+        if (_serialize_user(fd, t->support_agent) != 1) {
+            fprintf(stderr, "%s(): user serialization failed.\n", __func__);
+            return -1;
+        }
     }
 
     return 1;
@@ -342,13 +351,27 @@ ticket_t *_deserialize_ticket(int fd) {
     ticket->priority = (TicketPriority)ntohl(pr_n);
     ticket->status = (TicketStatus)ntohl(st_n);
 
-    user_t *user = _deserialize_user(fd);
+    uint8_t has_agent;
+    if (read_all(fd, &has_agent, sizeof(uint8_t)) != sizeof(uint8_t)) {
+        fprintf(stderr, "%s(): read failed (agent flag).\n", __func__);
+        free(ticket->title);
+        free(ticket->description);
+        free(ticket->date);
+        free(ticket);
+        return NULL;
+    }
 
-    if (user == NULL || !_add_user(user)) {
-        _free_user(user);
-        ticket->support_agent = NULL;
+    if (has_agent) {
+        user_t *user = _deserialize_user(fd);
+
+        if (user == NULL || !_add_user(user)) {
+            _free_user(user);
+            ticket->support_agent = NULL;
+        } else {
+            ticket->support_agent = user;
+        }
     } else {
-        ticket->support_agent = user;
+        ticket->support_agent = NULL;
     }
 
     ticket->next = NULL;

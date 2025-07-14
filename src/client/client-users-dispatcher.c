@@ -1,7 +1,5 @@
-#include "../../include/client-users-dispatcher.h"
-
 #include <stdlib.h>
-
+#include "../../include/client-users-dispatcher.h"
 #include "../../include/utils.h"
 
 message_t *input_login(FILE *fp) {

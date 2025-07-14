@@ -35,6 +35,8 @@ int _count_tickets();
 int _set_support_agent(ticket_t *ticket, user_t *support_agent);
 int _set_status(ticket_t *ticket, TicketStatus new_status);
 char *_print_ticket(const ticket_t *ticket);
+char *_print_status(TicketStatus s);
+char *_print_priority(TicketPriority p);
 
 int _serialize_ticket(int fd, const ticket_t *t);
 ticket_t *_deserialize_ticket(int fd);

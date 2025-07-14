@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "ticket.h"
 #include "../../include/privileges.h"
 
 typedef struct user {
@@ -25,8 +24,6 @@ user_t *_authenticate(const char *username, const char *passw);
 int _count_users();
 const char *_privilege_to_string(Privileges p);
 char *_print_user(const user_t *user);
-char *_print_status(TicketStatus s);
-char *_print_priority(TicketPriority p);
 
 int _serialize_user(int fd, const user_t *u);
 user_t *_deserialize_user(int fd);
