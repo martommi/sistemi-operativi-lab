@@ -90,18 +90,18 @@ int _get_tickets(ticket_t ***destination, ticket_filter filter, ...) {
 }
 
 int get_by_priority(const ticket_t *target, va_list args) {
-    TicketPriority priority = va_arg(args, TicketPriority);
+    TicketPriority priority = (TicketPriority)va_arg(args, int);
     return (target->priority == priority);
 }
 
 int get_by_status(const ticket_t *target, va_list args) {
-    TicketStatus status = va_arg(args, TicketStatus);
+    TicketStatus status = (TicketStatus)va_arg(args, int);
     return (target->status == status);
 }
 
 int get_by_title(const ticket_t *target, va_list args) {
     const char *query = va_arg(args, const char *);
-    TitleMatchMode mode = va_arg(args, TitleMatchMode);
+    TitleMatchMode mode = (TitleMatchMode)va_arg(args, int);
 
     switch (mode) {
         case TITLE_MATCH_EXACT:
@@ -123,7 +123,7 @@ int get_by_date(const ticket_t *target, va_list args) {
     if (!ticket_date) return 0;
     strip_newline(ticket_date);
 
-    DateMatchMode mode = va_arg(args, DateMatchMode);
+    DateMatchMode mode = (DateMatchMode)va_arg(args, int);
 
     switch (mode) {
         case DATE_MATCH_EXACT: {
@@ -158,7 +158,7 @@ int get_by_date(const ticket_t *target, va_list args) {
 }
 
 int get_by_tid(const ticket_t *target, va_list args) {
-    uint32_t tid = va_arg(args, uint32_t);
+    uint32_t tid = (uint32_t)va_arg(args, unsigned int);
     return target->tid == tid;
 }
 
