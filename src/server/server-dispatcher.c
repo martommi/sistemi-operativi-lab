@@ -96,8 +96,6 @@ response_t *handle_quit(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Error saving on file tickets and users (wrong path?).\n"));
     }
 
-    free_message(&msg);
-
     return create_response(RESP_EXIT, create_message_from_str("[SERVER] Users and tickets saved. You will now be disconnected.\n"));
 }
 
