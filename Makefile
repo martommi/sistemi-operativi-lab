@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -O0 -Iinclude -Isrc # tells the compiler where to look for .h
+CFLAGS = -Iinclude -Isrc # tells the compiler where to look for .h
 
 # Server
 SERVER_SRC = src/server/server.c $(wildcard src/auth/*.c) $(wildcard src/utils/*-utils.c)
@@ -11,7 +11,7 @@ CLIENT_SRC = $(wildcard src/client/*.c) $(wildcard src/auth/*.c) $(wildcard src/
 CLIENT_OBJ = $(CLIENT_SRC:.c=.o)
 CLIENT_TARGET = client
 
-# Client handler (aka server instance)
+# Client handler
 CLIENT_HANDLER_SRC = $(filter-out src/server/server.c, $(wildcard src/server/*.c)) $(wildcard src/net/*.c) $(wildcard src/auth/*.c) $(wildcard src/ticket/*.c) $(wildcard src/utils/*.c) 
 CLIENT_HANDLER_OBJ = $(CLIENT_HANDLER_SRC:.c=.o)
 CLIENT_HANDLER_TARGET = client_handler
@@ -31,19 +31,24 @@ $(CLIENT_HANDLER_TARGET): $(CLIENT_HANDLER_OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 install:
-	mkdir -p obj bin/internal etc data
+	mkdir -p obj bin/internal data/users data/tickets
 	find src/ -name '*.o' -exec mv {} obj/ \;
 	mv client server bin/
 	mv client_handler bin/internal/
 
 clean:
-	rm -f bin/client server
-	rm -f bin/internal/client_handler
-	rm -f *.o
-	rm -f obj/*.o
+	rm -f bin/client bin/server bin/internal/client_handler
+	find . -type f -name '*.o' -exec rm -f {} +
+	rm -f log/setup.log
 
-setup: install
+setup:
+	@mkdir -p log
+	@echo "[SETUP] Cleaning previous build..."
+	@$(MAKE) clean > log/setup.log 2>&1 || { echo "[ERROR] clean failed. Check log/setup.log"; tail -n 10 log/setup.log; exit 1; }
+	@echo "[SETUP] Compiling all targets..."
+	@$(MAKE) all >> log/setup.log 2>&1 || { echo "[ERROR] build failed. Check log/setup.log"; tail -n 10 log/setup.log; exit 1; }
+	@echo "[SETUP] Installing binaries and directories..."
+	@$(MAKE) install >> log/setup.log 2>&1 || { echo "[ERROR] install failed. Check log/setup.log"; tail -n 10 log/setup.log; exit 1; }
 	@echo "[SETUP] Loading test users..."
-	@mkdir -p etc
-	@printf "admin:admin123\nagent:agent123" > etc/users-config.dat
-	@chmod 600 etc/users-config.dat
+	@echo "[SETUP] Done. Full log in log/setup.log"
+	@echo "You can now run with ./bin/server <port> and ./bin/client <ip> <port>"

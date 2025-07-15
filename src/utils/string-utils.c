@@ -61,6 +61,8 @@ char *deserialize_string(int fd) {
     return str;
 }
 
-void strip_newline(char *s) {
-    s[strcspn(s, "\n")] = '\0';
+void strip_newline(char *str) {
+    if (!str) return;
+    char *p = strchr(str, '\n');
+    if (p) *p = '\0';
 }

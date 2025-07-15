@@ -90,18 +90,18 @@ int _get_tickets(ticket_t ***destination, ticket_filter filter, ...) {
 }
 
 int get_by_priority(const ticket_t *target, va_list args) {
-    TicketPriority priority = va_arg(args, TicketPriority);
+    TicketPriority priority = (TicketPriority)va_arg(args, int);
     return (target->priority == priority);
 }
 
 int get_by_status(const ticket_t *target, va_list args) {
-    TicketStatus status = va_arg(args, TicketStatus);
+    TicketStatus status = (TicketStatus)va_arg(args, int);
     return (target->status == status);
 }
 
 int get_by_title(const ticket_t *target, va_list args) {
     const char *query = va_arg(args, const char *);
-    TitleMatchMode mode = va_arg(args, TitleMatchMode);
+    TitleMatchMode mode = (TitleMatchMode)va_arg(args, int);
 
     switch (mode) {
         case TITLE_MATCH_EXACT:
@@ -123,7 +123,7 @@ int get_by_date(const ticket_t *target, va_list args) {
     if (!ticket_date) return 0;
     strip_newline(ticket_date);
 
-    DateMatchMode mode = va_arg(args, DateMatchMode);
+    DateMatchMode mode = (DateMatchMode)va_arg(args, int);
 
     switch (mode) {
         case DATE_MATCH_EXACT: {
@@ -158,7 +158,7 @@ int get_by_date(const ticket_t *target, va_list args) {
 }
 
 int get_by_tid(const ticket_t *target, va_list args) {
-    uint32_t tid = va_arg(args, uint32_t);
+    uint32_t tid = (uint32_t)va_arg(args, unsigned int);
     return target->tid == tid;
 }
 
@@ -292,8 +292,17 @@ int _serialize_ticket(int fd, const ticket_t *t) {
         return -1;
     }
 
-    if (_serialize_user(fd, t->support_agent) == -1) {
+    uint8_t has_agent = (t->support_agent != NULL) ? 1 : 0;
+    if (write_all(fd, &has_agent, sizeof(uint8_t)) != sizeof(uint8_t)) {
+        fprintf(stderr, "%s(): write failed (agent flag).\n", __func__);
         return -1;
+    }
+
+    if (has_agent) {
+        if (_serialize_user(fd, t->support_agent) != 1) {
+            fprintf(stderr, "%s(): user serialization failed.\n", __func__);
+            return -1;
+        }
     }
 
     return 1;
@@ -342,13 +351,27 @@ ticket_t *_deserialize_ticket(int fd) {
     ticket->priority = (TicketPriority)ntohl(pr_n);
     ticket->status = (TicketStatus)ntohl(st_n);
 
-    user_t *user = _deserialize_user(fd);
+    uint8_t has_agent;
+    if (read_all(fd, &has_agent, sizeof(uint8_t)) != sizeof(uint8_t)) {
+        fprintf(stderr, "%s(): read failed (agent flag).\n", __func__);
+        free(ticket->title);
+        free(ticket->description);
+        free(ticket->date);
+        free(ticket);
+        return NULL;
+    }
 
-    if (user == NULL || !_add_user(user)) {
-        _free_user(user);
-        ticket->support_agent = NULL;
+    if (has_agent) {
+        user_t *user = _deserialize_user(fd);
+
+        if (user == NULL || !_add_user(user)) {
+            _free_user(user);
+            ticket->support_agent = NULL;
+        } else {
+            ticket->support_agent = user;
+        }
     } else {
-        ticket->support_agent = user;
+        ticket->support_agent = NULL;
     }
 
     ticket->next = NULL;

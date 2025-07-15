@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,11 +12,22 @@
 #include "../../include/response.h"
 #include "../../include/client-dispatcher.h"
 
+static int sock = -1;
+
+void handle_signal(int sig);
+
+void handle_signal(int sig) {
+    fprintf(stderr,"\n[CLIENT] Caught signal %d, closing connection...\n", sig);
+    if (sock != -1) {
+        close(sock);
+    }
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr;
     char target_ip[16];
     int port = DEFAULT_PORT;
-    int sock;
 
     switch (argc) {
         case 3:
@@ -39,6 +51,9 @@ int main(int argc, char *argv[]) {
         perror("socket()");
         exit(EXIT_FAILURE);
     }
+
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
@@ -66,11 +81,12 @@ int main(int argc, char *argv[]) {
 
         if (retcode < 0) {
             fprintf(stderr, "[CLIENT] failed to build request. Please try again or restart.\n");
-            continue;
+            break;
         }
 
         if (send_request(sock, req) < 0) {
             fprintf(stderr, "[CLIENT] something went wrong communicating with server.\n");
+            free_request(&req);
             continue;
         }
 

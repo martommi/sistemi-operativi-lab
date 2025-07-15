@@ -5,7 +5,7 @@
 
 #include "../../include/ticket.h"
 #include "ticket-internal.h"
-#include "auth/user-internal.h"
+#include "../auth/user-internal.h"
 
 int open_ticket(char *title, char *desc, const char *date, TicketPriority priority, TicketStatus status, user_t *support_agent) {
     ticket_t *ticket = _create_ticket(title, desc, date, priority, status, support_agent);
@@ -54,7 +54,7 @@ int get_tickets_by_title(ticket_t ***dest, const char *query, TitleMatchMode mod
 }
 
 int get_tickets_by_date(ticket_t ***dest, DateMatchMode mode, const char *arg1, const char *arg2) {
-    return _get_tickets(dest, get_by_date, arg1, arg2);
+    return _get_tickets(dest, get_by_date, mode, arg1, arg2);
 }
 
 int get_ticket_by_tid(ticket_t ***dest, uint32_t tid) {
