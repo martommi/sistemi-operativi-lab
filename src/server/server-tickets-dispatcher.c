@@ -57,7 +57,7 @@ response_t *handle_assign_ticket(session_t *session, message_t *msg) {
     user_t **support_agent;
     find_users(msg->content[1], &support_agent);
 
-    if (!ticket[0] || !support_agent[0]) {
+    if (!ticket || !support_agent) {
         return create_response(RESP_ERROR, create_message_from_str("[TICKET] Ticket or support agent not found.\n"));
     }
 
@@ -81,7 +81,9 @@ response_t *handle_update_ticket_status(session_t *session, message_t *msg) {
     }
 
     ticket_t **ticket;
-    get_ticket_by_tid(&ticket, atoi(msg->content[0]));
+    if (get_ticket_by_tid(&ticket, atoi(msg->content[0])) <= 0) {
+        return create_response(RESP_ERROR, create_message_from_str("[TICKET] Ticket not found.\n"));
+    }
 
     return update_status(ticket[0], atoi(msg->content[1])) > 0
         ? create_response(RESP_OK, create_message_from_str("[TICKET] Update succesful.\n"))
