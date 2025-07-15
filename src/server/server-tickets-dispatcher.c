@@ -13,7 +13,7 @@ response_t *handle_open_ticket(session_t *session, message_t *msg) {
     }
 
     return open_ticket(msg->content[0], msg->content[1], msg->content[2],
-        TICKET_PRIORITY_STANDARD, TICKET_STATUS_OPEN, NULL)
+        TICKET_PRIORITY_STANDARD, TICKET_STATUS_OPEN, NULL) > 0
 
         ? create_response(RESP_OK, create_message_from_str("[TICKET] Ticket opened.\n"))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] Ticket creation failed.\n"));
@@ -33,7 +33,7 @@ response_t *handle_delete_ticket(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
-    return delete_ticket(atoi(msg->content[0])) 
+    return delete_ticket(atoi(msg->content[0])) > 0
         ? create_response(RESP_OK, create_message_from_str("[TICKET] Ticket removed.\n"))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] Error removing ticket (non-existing?).\n"));
 }
@@ -61,7 +61,7 @@ response_t *handle_assign_ticket(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[TICKET] Ticket or support agent not found.\n"));
     }
 
-    return assign_ticket(ticket[0], support_agent[0])
+    return assign_ticket(ticket[0], support_agent[0]) > 0
         ? create_response(RESP_OK, create_message_from_str("[TICKET] ticket assigned.\n"))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] Error assigning ticket.\n"));
 }
@@ -71,6 +71,10 @@ response_t *handle_update_ticket_status(session_t *session, message_t *msg) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));
     }
+    
+    if (!session_has_privileges(session, PRIVILEGES_ADMIN | PRIVILEGES_SUPPORT_AGENT)) {
+        return create_response(RESP_ERROR, create_message_from_str("[SERVER] Missing required privileges: ADMIN or SUPPORT\n"));
+    }
 
     if (msg->size < 2) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
@@ -79,7 +83,7 @@ response_t *handle_update_ticket_status(session_t *session, message_t *msg) {
     ticket_t **ticket;
     get_ticket_by_tid(&ticket, atoi(msg->content[0]));
 
-    return update_status(ticket[0], atoi(msg->content[1]))
+    return update_status(ticket[0], atoi(msg->content[1])) > 0
         ? create_response(RESP_OK, create_message_from_str("[TICKET] Update succesful.\n"))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] Error updating.\n"));
 }
@@ -271,7 +275,7 @@ response_t *handle_save_tickets(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
-    return save_tickets(msg->content[0]) 
+    return save_tickets(msg->content[0]) > 0
         ? create_response(RESP_OK, create_message_from_str("[TICKET] tickets saved on file.\n"))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] failed to save tickets.\n"));
 }
@@ -290,7 +294,7 @@ response_t *handle_load_tickets(session_t *session, message_t *msg) {
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Invalid args.\n"));
     }
 
-    return load_tickets(msg->content[0]) 
+    return load_tickets(msg->content[0]) > 0
         ? create_response(RESP_OK, create_message_from_str("[TICKET] tickets saved on file.\n"))
         : create_response(RESP_ERROR, create_message_from_str("[TICKET] failed to save tickets.\n"));
 }
