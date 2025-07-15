@@ -226,7 +226,7 @@ response_t *handle_filter_by_title(session_t *session, message_t *msg) {
     return create_response(RESP_OK, out);
 }
 
-response_t *handle_filter_by_date(session_t *session, message_t *msg) { // TODO modifica in base al numero di argomenti
+response_t *handle_filter_by_date(session_t *session, message_t *msg) {
     if (msg == NULL || session == NULL || msg->content == NULL) {
         fprintf(stderr, "%s(): null pointer.\n", __func__);
         return create_response(RESP_ERROR, create_message_from_str("[SERVER] Something went wrong.\n"));
@@ -238,8 +238,11 @@ response_t *handle_filter_by_date(session_t *session, message_t *msg) { // TODO 
 
     int count;
     ticket_t **tickets;
+    int mode = atoi(msg->content[0]);
+    const char *arg1 = msg->content[1];
+    const char *arg2 = msg->content[2] ? msg->content[2] : NULL;
     
-    if ((count = get_tickets_by_date(&tickets, atoi(msg->content[0]), msg->content[1], msg->content[2])) <= 0) {
+    if ((count = get_tickets_by_date(&tickets, mode, arg1, arg2)) <= 0) {
         return create_response(RESP_OK, create_message_from_str("[TICKET] no ticket found.\n"));
     }
 
