@@ -15,7 +15,7 @@ static session_t *session = NULL;
 void handle_signal(int sig);
 
 void handle_signal(int sig) {
-    fprintf(stderr, "\nCaught signal %d, shutting down...\n", sig);
+    fprintf(stderr, "\n[SERVER] Caught signal %d, shutting down gracefully...\n", sig);
 
     handle_quit(session, NULL);
 
@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    signal(SIGTERM, handle_signal);
+
     /* Retrieve socket descriptor. */
     char *endptr;
     errno = 0;
@@ -47,7 +49,6 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    /* Handling signals */
     signal(SIGINT, handle_signal);    // saves the state if interrupted.
 
     session = create_session(client_sock, NULL, 0, PRIVILEGES_GUEST);

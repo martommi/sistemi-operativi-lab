@@ -12,11 +12,28 @@
 #define CLIENT_HANDLER_NAME "client_handler"
 #define CLIENT_HANDLER_PATH "./bin/internal/" CLIENT_HANDLER_NAME
 
+static int server_sock;    /* Just for handling signals */
+
+void handle_signal(int sig);
+
+void handle_signal(int sig) {
+    printf("\n[SERVER] SIGINT received. Shutting down server...\n");
+
+    pid_t pgid = getpgrp();
+    printf("[SERVER] Sending SIGTERM to process group %d\n", pgid);    /* If interrupted, kill all children (in the same group)*/
+    killpg(pgid, SIGTERM);
+
+    close(server_sock);
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_len = sizeof(client_addr);
-    int server_sock, client_sock;
+    int client_sock;
     int port = DEFAULT_PORT;
+
+    signal(SIGINT, handle_signal);
 
     if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {    /* Socket creation */
         perror("socket()");
@@ -50,7 +67,9 @@ int main(int argc, char *argv[]) {
 
     printf("Server now listening on port: %d\n", port);
 
-    signal(SIGCHLD, SIG_IGN);    /* No need to wait for forked children, kill them at termination. */
+    signal(SIGCHLD, SIG_IGN);    /* Ignore children, automatic cleanup */
+    setpgid(0, 0);
+
     while (1) {    /* Server loop */
         if ((client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_len)) == -1) {
             perror("accept()");
@@ -59,6 +78,8 @@ int main(int argc, char *argv[]) {
 
         pid_t pid = fork();
         if (pid == 0) {
+            setpgid(0, getppid());    /* Same group as server for controlled termination */
+
             char *client_ip = inet_ntoa(client_addr.sin_addr);
             printf("Client @ %s connected.\n", client_ip);
 
